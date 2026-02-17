@@ -6,10 +6,8 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Polyfill process.env for the browser to match the code's usage
-      'process.env': {
-        API_KEY: env.API_KEY || env.VITE_API_KEY
-      }
+      // define specific key to avoid overwriting all of process.env
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || env.VITE_API_KEY)
     },
     build: {
       outDir: 'dist',

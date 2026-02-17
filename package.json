@@ -14,7 +14,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.0",
     "lucide-react": "^0.344.0",
-    "@google/genai": "^0.2.0",
+    "@google/genai": "^0.1.2",
     "react-player": "^2.15.1",
     "@supabase/supabase-js": "^2.39.7",
     "@capacitor/core": "^5.7.0"
@@ -25,5 +25,8 @@
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.2.2",
     "vite": "^5.1.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
