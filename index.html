@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LinguistAI - Learn English</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Fredoka', 'sans-serif'],
+              adult: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              primary: {
+                50: '#e0f7fa',
+                100: '#b2ebf2',
+                400: '#26c6da',
+                500: '#00bcd4',
+                600: '#00acc1',
+                700: '#0097a7',
+              },
+              fun: {
+                blue: '#4FC3F7',
+                green: '#AED581',
+                yellow: '#FFF176',
+                orange: '#FFB74D',
+                pink: '#F06292',
+                purple: '#BA68C8'
+              },
+              pro: {
+                slate: '#1e293b',
+                blue: '#2563eb',
+                indigo: '#4f46e5',
+                gray: '#f8fafc'
+              }
+            },
+            borderRadius: {
+              'xl': '1rem',
+              '2xl': '1.5rem',
+              '3xl': '2rem',
+            },
+            animation: {
+              'bounce-slow': 'bounce 3s infinite',
+              'fade-in': 'fadeIn 0.5s ease-out',
+              'wiggle': 'wiggle 1s ease-in-out infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'confetti': 'confetti 5s ease-in-out infinite',
+              'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'gradient-xy': 'gradient-xy 3s ease infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              wiggle: {
+                '0%, 100%': { transform: 'rotate(-3deg)' },
+                '50%': { transform: 'rotate(3deg)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0px)' },
+                '50%': { transform: 'translateY(-20px)' },
+              },
+              confetti: {
+                '0%': { transform: 'translateY(-10vh) rotate(0deg)' },
+                '100%': { transform: 'translateY(110vh) rotate(360deg)' },
+              },
+              'gradient-xy': {
+                  '0%, 100%': {
+                      'background-size':'200% 200%',
+                      'background-position': 'left center'
+                  },
+                  '50%': {
+                      'background-size':'200% 200%',
+                      'background-position': 'right center'
+                  }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      /* Disable Text Selection Globally */
+      body {
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+      }
+      
+      /* Allow selection in inputs and textareas */
+      input, textarea {
+        -webkit-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+      }
+
+      /* Custom scrollbar for webkit */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8; 
+      }
+
+      /* 3D Flip Card Styles */
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+      .transform-style-3d {
+        transform-style: preserve-3d;
+      }
+      .backface-hidden {
+        backface-visibility: hidden;
+      }
+      .rotate-y-180 {
+        transform: rotateY(180deg);
+      }
+      .card-inner {
+        transition: transform 0.6s;
+      }
+      .card-flip:hover .card-inner, .card-flipped .card-inner {
+        transform: rotateY(180deg);
+      }
+
+      /* Pop animation */
+      @keyframes pop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
+      .animate-pop {
+        animation: pop 0.3s ease-out;
+      }
+
+      /* Rainbow Text */
+      .rainbow-text {
+        background-image: linear-gradient(to left, #F06292, #BA68C8, #4FC3F7, #AED581, #FFF176, #FFB74D);
+        -webkit-background-clip: text;
+        color: transparent;
+        background-size: 200% auto;
+        animation: rainbow 3s linear infinite;
+      }
+      @keyframes rainbow {
+        to { background-position: 200% center; }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "react-player": "https://esm.sh/react-player@2.16.0?external=react,react-dom",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.3",
+    "@capacitor/core": "https://esm.sh/@capacitor/core@^5.0.0",
+    "@revenuecat/purchases-js": "https://esm.sh/@revenuecat/purchases-js@^1.1.1"
+  }
+}
+</script>
+</head>
+  <body class="text-slate-800 antialiased">
+    <div id="root"></div>
+  </body>
+</html>
