@@ -1,10 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LinguistAI - Learn English</title>
-    <!-- We keep Tailwind CDN for simplicity in this setup -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -87,66 +87,32 @@
       }
     </script>
     <style>
-      /* Disable Text Selection Globally */
       body {
-        -webkit-user-select: none; /* Safari */
-        -ms-user-select: none; /* IE 10 and IE 11 */
-        user-select: none; /* Standard syntax */
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
       }
-      
-      /* Allow selection in inputs and textareas */
       input, textarea {
         -webkit-user-select: text;
         -ms-user-select: text;
         user-select: text;
       }
-
-      /* Custom scrollbar for webkit */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8; 
-      }
-
-      /* 3D Flip Card Styles */
-      .perspective-1000 {
-        perspective: 1000px;
-      }
-      .transform-style-3d {
-        transform-style: preserve-3d;
-      }
-      .backface-hidden {
-        backface-visibility: hidden;
-      }
-      .rotate-y-180 {
-        transform: rotateY(180deg);
-      }
-      .card-inner {
-        transition: transform 0.6s;
-      }
-      .card-flip:hover .card-inner, .card-flipped .card-inner {
-        transform: rotateY(180deg);
-      }
-
-      /* Pop animation */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+      .perspective-1000 { perspective: 1000px; }
+      .transform-style-3d { transform-style: preserve-3d; }
+      .backface-hidden { backface-visibility: hidden; }
+      .rotate-y-180 { transform: rotateY(180deg); }
+      .card-inner { transition: transform 0.6s; }
+      .card-flip:hover .card-inner, .card-flipped .card-inner { transform: rotateY(180deg); }
       @keyframes pop {
         0% { transform: scale(1); }
         50% { transform: scale(1.2); }
         100% { transform: scale(1); }
       }
-      .animate-pop {
-        animation: pop 0.3s ease-out;
-      }
-
-      /* Rainbow Text */
+      .animate-pop { animation: pop 0.3s ease-out; }
       .rainbow-text {
         background-image: linear-gradient(to left, #F06292, #BA68C8, #4FC3F7, #AED581, #FFF176, #FFB74D);
         -webkit-background-clip: text;
@@ -154,24 +120,22 @@
         background-size: 200% auto;
         animation: rainbow 3s linear infinite;
       }
-      @keyframes rainbow {
-        to { background-position: 200% center; }
-      }
+      @keyframes rainbow { to { background-position: 200% center; } }
     </style>
-<script type="importmap">
+  <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://esm.sh/lucide-react@^0.574.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.574.0",
+    "react-player": "https://esm.sh/react-player@^3.4.0",
     "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.96.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
     "@capacitor/core": "https://esm.sh/@capacitor/core@^8.1.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react-player": "https://esm.sh/react-player@^3.4.0"
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
   }
 }
 </script>

@@ -1,7 +1,5 @@
 
 import { Capacitor } from '@capacitor/core';
-// Note: You must run `npm install @capacitor-community/billing` for this to work on a device
-import { GoogleBilling } from '@capacitor-community/billing';
 
 // --- SHARED TYPES ---
 export interface PurchasesPackage {
@@ -17,6 +15,9 @@ export interface PurchasesPackage {
 // MUST match the Product ID created in Google Play Console -> Monetize -> Subscriptions
 const GOOGLE_PLAY_PRODUCT_ID = 'linguist_ai_premium_monthly';
 
+// Variable to hold the dynamically imported plugin
+let GoogleBilling: any = null;
+
 export const IAP = {
     /**
      * Initialize Payment Service
@@ -24,7 +25,11 @@ export const IAP = {
     async initialize(userId?: string) {
         if (Capacitor.isNativePlatform()) {
             try {
-                // 1. Connect to the Google Play Billing Bridge
+                // Dynamic import ensures this code is only loaded/executed on native devices
+                // This prevents "module not found" errors on the web
+                const billingModule = await import('@capacitor-community/billing');
+                GoogleBilling = billingModule.GoogleBilling;
+
                 await GoogleBilling.closeConnection(); // Safety reset
                 await GoogleBilling.connect();
                 console.log('IAP: Connected to Google Play Billing');
@@ -40,7 +45,7 @@ export const IAP = {
      * Get available packages (products) to display in UI
      */
     async getPackages(): Promise<PurchasesPackage[]> {
-        if (Capacitor.isNativePlatform()) {
+        if (Capacitor.isNativePlatform() && GoogleBilling) {
             try {
                 // 2. Query specific product details from the store
                 const response = await GoogleBilling.querySkuDetails({
@@ -84,7 +89,7 @@ export const IAP = {
      */
     async purchasePackage(pkg: PurchasesPackage): Promise<boolean> {
         try {
-            if (Capacitor.isNativePlatform()) {
+            if (Capacitor.isNativePlatform() && GoogleBilling) {
                 // 3. Launch the native bottom sheet
                 const response = await GoogleBilling.launchBillingFlow({
                     sku: pkg.identifier,
@@ -92,7 +97,6 @@ export const IAP = {
                 });
 
                 // 4. Checking the local result (In production, validate token with backend!)
-                // GoogleBilling returns the purchase object if successful
                 if (response) {
                     console.log('IAP: Purchase Successful', response);
                     return true;
@@ -117,7 +121,7 @@ export const IAP = {
      * Check if user currently has premium access
      */
     async checkSubscriptionStatus(): Promise<boolean> {
-        if (Capacitor.isNativePlatform()) {
+        if (Capacitor.isNativePlatform() && GoogleBilling) {
             try {
                 // Check if the user has purchased this product before
                 const purchases = await GoogleBilling.getPurchases({ skuType: 'subs' });
