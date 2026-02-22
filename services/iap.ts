@@ -8,6 +8,7 @@ export interface PurchasesPackage {
         priceString: string;
         title: string;
         description: string;
+        currencyCode?: string;
     };
     rawPackage?: any; 
 }

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Sword, Heart, Wand, ChevronLeft, Zap, Sparkles, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGamification } from '../context/GamificationContext';
-import { generateSpeech } from '../services/geminiService';
 import Confetti from '../components/Confetti';
 
 const SPELLS = [
@@ -38,7 +37,7 @@ const BossBattle: React.FC = () => {
       setIsAnimating('player-attack');
       setBossHealth(h => Math.max(0, h - 25));
       setLog(prev => ["Critical hit! Spell cast successfully!", ...prev]);
-      generateSpeech("Critical hit! Correct answer.");
+      // generateSpeech("Critical hit! Correct answer.");
       
       setTimeout(() => {
         setIsAnimating(null);
@@ -55,7 +54,7 @@ const BossBattle: React.FC = () => {
       setIsAnimating('boss-attack');
       setPlayerHealth(h => Math.max(0, h - 20));
       setLog(prev => ["Incorrect! The Dragon breathes fire!", ...prev]);
-      generateSpeech("Oh no! The dragon attacked.");
+      // generateSpeech("Oh no! The dragon attacked.");
       
       setTimeout(() => {
         setIsAnimating(null);

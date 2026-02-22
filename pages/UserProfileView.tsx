@@ -94,8 +94,8 @@ const UserProfileView: React.FC = () => {
                     </h3>
                     <div className="flex flex-wrap gap-4">
                         {profile.badges.length === 0 && <p className="text-slate-400">No badges earned yet.</p>}
-                        {profile.badges.map(b => (
-                            <BadgeDisplayPro key={b.id} badge={b} />
+                        {profile.badges.map((b, index) => (
+                            <BadgeDisplayPro key={`${b.id}-${index}`} badge={b} />
                         ))}
                     </div>
                 </div>
@@ -149,8 +149,8 @@ const UserProfileView: React.FC = () => {
                             No trophies yet!
                         </div>
                     )}
-                    {profile.badges.map(badge => (
-                        <BadgeDisplayKids key={badge.id} badge={badge} />
+                    {profile.badges.map((badge, index) => (
+                        <BadgeDisplayKids key={`${badge.id}-${index}`} badge={badge} />
                     ))}
                 </div>
             </div>

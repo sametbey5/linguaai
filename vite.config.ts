@@ -7,7 +7,6 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       // define specific key to avoid overwriting all of process.env
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || env.VITE_API_KEY)
     },
     build: {
       outDir: 'dist',

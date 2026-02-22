@@ -252,9 +252,9 @@ const BadgeTrading: React.FC = () => {
                          <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2 pl-2">Pick a Badge to Give</label>
                          <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 bg-slate-50 rounded-2xl border-4 border-slate-100">
                              {badges.length === 0 && <p className="col-span-3 text-center text-slate-400 py-4 font-bold">No badges to trade!</p>}
-                             {badges.map(b => (
+                             {badges.map((b, index) => (
                                  <div 
-                                    key={b.id} 
+                                    key={`${b.id}-${index}`} 
                                     onClick={() => setSelectedBadgeId(b.id)}
                                     className={`p-2 rounded-xl cursor-pointer border-2 transition-all ${selectedBadgeId === b.id ? 'bg-white border-fun-blue shadow-md' : 'border-transparent hover:bg-white'}`}
                                  >

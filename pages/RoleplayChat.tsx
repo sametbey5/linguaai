@@ -1,17 +1,34 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, ChevronLeft, Heart, Backpack, Sword, Shield, Zap } from 'lucide-react';
+import { Send, ChevronLeft, Heart, Backpack, Sword, Shield, Zap, Globe } from 'lucide-react';
 import { QUESTS_KIDS, QUESTS_ADULTS } from '../constants';
-import { createGeminiChat } from '../services/geminiService';
 import { Message, Scenario } from '../types';
 import { useGamification } from '../context/GamificationContext';
+import { SCENARIO_TRANSLATIONS, UI_TRANSLATIONS } from '../translations';
+
+// Mock Chat Service
+const createMockChat = (systemInstruction: string) => {
+  return {
+    sendMessage: async ({ message }: { message: string }) => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return {
+        text: `(AI Removed) You said: "${message}". This is a mock response because the AI service has been removed.`
+      };
+    }
+  };
+};
 // Added missing Button import
 import Button from '../components/Button';
 
 const QuestAdventure: React.FC = () => {
-  const { mode, awardPoints } = useGamification();
+  const { mode, awardPoints, usageContext, preferredLanguage } = useGamification();
   const isKids = mode === 'kids';
   
+  const t = (key: string) => UI_TRANSLATIONS[preferredLanguage]?.[key] || UI_TRANSLATIONS['Turkish']?.[key] || key;
+  const translateScenario = (id: string, field: 'title' | 'description', fallback: string) => {
+    return SCENARIO_TRANSLATIONS[preferredLanguage]?.[id]?.[field] || fallback;
+  };
+
   const [selectedQuest, setSelectedQuest] = useState<Scenario | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [health, setHealth] = useState(3);
@@ -21,7 +38,65 @@ const QuestAdventure: React.FC = () => {
   const [activeChat, setActiveChat] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const quests = isKids ? QUESTS_KIDS : QUESTS_ADULTS;
+  // Dynamic Quests based on Context
+  const getQuests = () => {
+    if (isKids) return QUESTS_KIDS;
+    
+    const baseQuests = [...QUESTS_ADULTS];
+    
+    if (usageContext === 'Travel') {
+      baseQuests.push({
+        id: 'quest-travel-1',
+        title: 'Airport Check-in',
+        description: 'Navigate through customs and check-in without missing your flight!',
+        emoji: '✈️',
+        character: 'Officer Smith',
+        avatar: '👮',
+        themeColor: 'from-sky-500 to-blue-600',
+        difficulty: 'Intermediate',
+        systemInstruction: "You are an immigration officer. The user is a traveler. Ask them questions about their visa, purpose of visit, and luggage. If they hesitate or make big mistakes, they lose a 'Patience Heart'."
+      });
+      baseQuests.push({
+        id: 'quest-travel-2',
+        title: 'Lost in Tokyo',
+        description: 'Ask locals for directions to your hotel. Don\'t get lost!',
+        emoji: '🗺️',
+        character: 'Local Guide',
+        avatar: '🎎',
+        themeColor: 'from-red-500 to-pink-600',
+        difficulty: 'Beginner',
+        systemInstruction: "You are a helpful local. The user is lost. Give them directions but test their listening skills."
+      });
+    } else if (usageContext === 'Business') {
+       baseQuests.push({
+        id: 'quest-business-2',
+        title: 'Salary Negotiation',
+        description: 'Negotiate your new contract. Be firm but polite!',
+        emoji: '💰',
+        character: 'HR Manager',
+        avatar: '👔',
+        themeColor: 'from-green-600 to-emerald-800',
+        difficulty: 'Advanced',
+        systemInstruction: "You are an HR Manager. The user wants a raise. You are tough but fair. If they are rude or unclear, they lose a 'Negotiation Heart'."
+      });
+    } else if (usageContext === 'Academic') {
+       baseQuests.push({
+        id: 'quest-academic-1',
+        title: 'Thesis Defense',
+        description: 'Defend your research paper against the professor\'s questions.',
+        emoji: '🎓',
+        character: 'Professor X',
+        avatar: '👨‍🏫',
+        themeColor: 'from-amber-600 to-orange-800',
+        difficulty: 'Advanced',
+        systemInstruction: "You are a strict Professor. The user is defending their thesis. Ask hard questions. If they can't explain clearly, they lose a 'Grade Heart'."
+      });
+    }
+
+    return baseQuests;
+  };
+
+  const quests = getQuests();
 
   const startQuest = async (quest: Scenario) => {
     setSelectedQuest(quest);
@@ -30,7 +105,7 @@ const QuestAdventure: React.FC = () => {
     setInventory(['Map of ' + quest.character + "'s World"]);
     setIsLoading(true);
     
-    const chat = createGeminiChat(quest.systemInstruction);
+    const chat = createMockChat(quest.systemInstruction);
     setActiveChat(chat);
     
     try {
@@ -65,7 +140,7 @@ const QuestAdventure: React.FC = () => {
       }
 
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'model', text: reply }]);
-      awardPoints(25, 'Action Performed');
+      awardPoints(25, 'Action Performed', 'speaking');
     } catch (error) {
       console.error(error);
     } finally {
@@ -81,8 +156,8 @@ const QuestAdventure: React.FC = () => {
     return (
       <div className="max-w-5xl mx-auto space-y-12 animate-fade-in py-10">
         <div className="text-center space-y-4">
-           <h2 className="text-6xl font-black text-slate-800">AI ADVENTURES</h2>
-           <p className="text-xl font-bold text-slate-500">Embark on epic quests. Your English is your weapon!</p>
+           <h2 className="text-6xl font-black text-slate-800 uppercase tracking-tighter">{t('ai_adventures')}</h2>
+           <p className="text-xl font-bold text-slate-500">{t('embark_quests')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -91,11 +166,21 @@ const QuestAdventure: React.FC = () => {
                 <div className="flex justify-between items-start z-10 relative">
                    <div>
                       <h3 className="text-3xl font-black text-slate-800">{q.title}</h3>
+                      {preferredLanguage && preferredLanguage !== 'English' && (
+                        <p className="text-fun-blue font-bold text-sm mt-1 flex items-center gap-1">
+                          <Globe size={14} /> {translateScenario(q.id, 'title', '')}
+                        </p>
+                      )}
                       <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mt-1">{q.character}</p>
                    </div>
                    <div className="text-6xl group-hover:scale-125 transition-transform">{q.avatar}</div>
                 </div>
                 <p className="mt-6 text-slate-600 font-medium leading-relaxed z-10 relative">{q.description}</p>
+                {preferredLanguage && preferredLanguage !== 'English' && (
+                  <p className="mt-2 text-slate-400 font-medium italic text-sm z-10 relative">
+                    {translateScenario(q.id, 'description', '')}
+                  </p>
+                )}
                 <div className="mt-8 flex gap-2 z-10 relative">
                    <div className="bg-slate-50 px-3 py-1 rounded-full text-[10px] font-black uppercase text-slate-400 border border-slate-100">{q.difficulty}</div>
                    <div className="bg-fun-blue/10 px-3 py-1 rounded-full text-[10px] font-black uppercase text-fun-blue border border-fun-blue/20">3 HEARTS</div>
@@ -135,11 +220,11 @@ const QuestAdventure: React.FC = () => {
                 </div>
              </div>
            ))}
-           {health <= 0 && (
+            {health <= 0 && (
              <div className="bg-red-500 text-white p-10 rounded-3xl text-center font-black text-2xl animate-wiggle">
-                YOU DIED! YOUR ENGLISH WASN'T STRONG ENOUGH.
+                {t('wrong')} YOUR ENGLISH WASN'T STRONG ENOUGH.
                 {/* Fixed missing Button component by adding missing import */}
-                <Button onClick={() => startQuest(selectedQuest)} className="mt-4 block mx-auto" variant="secondary">TRY AGAIN</Button>
+                <Button onClick={() => startQuest(selectedQuest)} className="mt-4 block mx-auto" variant="secondary">{t('try_again')}</Button>
              </div>
            )}
            <div ref={messagesEndRef} />
@@ -164,8 +249,8 @@ const QuestAdventure: React.FC = () => {
       {/* Sidebar Game Info */}
       <div className="w-80 space-y-6 hidden lg:block">
          <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-100 shadow-xl">
-            <h4 className="flex items-center gap-2 font-black text-slate-800 text-xl mb-6">
-               <Backpack className="text-fun-orange" /> INVENTORY
+            <h4 className="flex items-center gap-2 font-black text-slate-800 text-xl mb-6 uppercase">
+               <Backpack className="text-fun-orange" /> {t('inventory')}
             </h4>
             <div className="space-y-3">
                {inventory.map((item, i) => (
@@ -176,8 +261,8 @@ const QuestAdventure: React.FC = () => {
             </div>
          </div>
          <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-xl">
-            <h4 className="flex items-center gap-2 font-black text-xl mb-4">
-               <Shield className="text-fun-blue" /> TUTOR TIP
+            <h4 className="flex items-center gap-2 font-black text-xl mb-4 uppercase">
+               <Shield className="text-fun-blue" /> {t('tutor_tip')}
             </h4>
             <p className="text-sm font-bold text-white/60 italic leading-relaxed">
                "Try using full sentences to avoid taking damage! Adjectives like 'shiny' or 'dangerous' gain bonus XP."

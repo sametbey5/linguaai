@@ -45,7 +45,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   // Authentication State
   const [userId, setUserId] = useState<string | null>(localStorage.getItem('current_user_id'));
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!localStorage.getItem('current_user_id'));
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -58,6 +58,10 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userTrades, setUserTrades] = useState<UserTrade[]>([]);
   const [isPremium, setIsPremium] = useState<boolean>(false);
+  const [focusArea, setFocusArea] = useState<string[]>(defaultProfile.focusArea || []);
+  const [usageContext, setUsageContext] = useState<string>(defaultProfile.usageContext || '');
+  const [cefrLevel, setCefrLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'>(defaultProfile.cefrLevel || 'A1');
+  const [preferredLanguage, setPreferredLanguage] = useState<string>(defaultProfile.preferredLanguage || 'Turkish');
   
   // Local (non-persisted) state
   const [tradeOffers, setTradeOffers] = useState<TradeOffer[]>(INITIAL_TRADES);
@@ -119,6 +123,10 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         setMode(newProfile.mode);
         setUserTrades(newProfile.trades || []);
         setIsPremium(newProfile.isPremium || false);
+        setFocusArea(newProfile.focusArea || []);
+        setUsageContext(newProfile.usageContext || '');
+        setCefrLevel(newProfile.cefrLevel || 'A1');
+        setPreferredLanguage(newProfile.preferredLanguage || 'Turkish');
       } else {
         // LOGIN FLOW
         if (!existingProfile) {
@@ -137,6 +145,10 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         setMode(existingProfile.mode);
         setUserTrades(existingProfile.trades || []);
         setIsPremium(existingProfile.isPremium || false);
+        setFocusArea(existingProfile.focusArea || []);
+        setUsageContext(existingProfile.usageContext || '');
+        setCefrLevel(existingProfile.cefrLevel || 'A1');
+        setPreferredLanguage(existingProfile.preferredLanguage || 'Turkish');
       }
 
       // Success
@@ -170,6 +182,10 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setLeaderboard([]);
     setUserTrades([]);
     setIsPremium(false);
+    setFocusArea([]);
+    setUsageContext('');
+    setCefrLevel('A1');
+    setPreferredLanguage('Turkish');
   };
 
   // Load User Data from DB when userId changes (e.g. on page refresh)
@@ -192,6 +208,10 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             setMode(profile.mode);
             setUserTrades(profile.trades || []);
             setIsPremium(profile.isPremium || false);
+            setFocusArea(profile.focusArea || []);
+            setUsageContext(profile.usageContext || '');
+            setCefrLevel(profile.cefrLevel || 'A1');
+            setPreferredLanguage(profile.preferredLanguage || 'Turkish');
             setIsInitialized(true);
           } else {
             // Edge case: ID in local storage but not in DB anymore
@@ -323,13 +343,42 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
               mode,
               trades: tradesToSave, // Use DB source of truth for trades
               password: passwordToSave,
-              isPremium: premiumStatus
+              isPremium: premiumStatus,
+              focusArea,
+              usageContext,
+              cefrLevel,
+              preferredLanguage
           });
       };
       
       const timeout = setTimeout(saveToDb, 2000);
       return () => clearTimeout(timeout);
-  }, [stats, badges, quests, mode, userId, isInitialized, isLoading, loadError, isPremium]);
+  }, [stats, badges, quests, mode, userId, isInitialized, isLoading, loadError, isPremium, focusArea, usageContext, cefrLevel, preferredLanguage]);
+
+  const updateProfile = async (data: Partial<UserProfile>) => {
+      if (data.focusArea) setFocusArea(data.focusArea);
+      if (data.usageContext) setUsageContext(data.usageContext);
+      if (data.cefrLevel) setCefrLevel(data.cefrLevel);
+      if (data.preferredLanguage) setPreferredLanguage(data.preferredLanguage);
+      
+      // Force immediate save for critical onboarding data
+      if (userId) {
+         try {
+             // We need to construct the full profile to save it
+             // But saveUser expects a UserProfile. 
+             // We can fetch current, merge, and save.
+             const currentProfile = await db.getUser(userId);
+             if (currentProfile) {
+                 await db.saveUser(userId, {
+                     ...currentProfile,
+                     ...data
+                 });
+             }
+         } catch (e) {
+             console.error("Failed to save profile update", e);
+         }
+      }
+  };
 
 
   // Check for day reset
@@ -376,29 +425,67 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, [stats.level, stats.awardedBadges, userId, isInitialized]);
 
-  const awardPoints = (amount: number, reason: string) => {
+  const awardPoints = (amount: number, reason: string, skillType?: 'vocabulary' | 'speaking' | 'listening' | 'grammar' | 'realLife') => {
     setStats(prev => {
       const newPoints = prev.points + amount;
       const newLevel = Math.floor(newPoints / 500) + 1;
       
+      let newSkills = { ...prev.skills };
+      
+      if (skillType && newSkills[skillType]) {
+          const skill = newSkills[skillType];
+          const newSkillXp = skill.totalXp + amount;
+          // Micro-leveling: Every 100 XP is a level
+          const newSkillLevel = Math.floor(newSkillXp / 100) + 1;
+          const newProgress = (newSkillXp % 100); // 0-99
+          
+          newSkills[skillType] = {
+              ...skill,
+              totalXp: newSkillXp,
+              level: newSkillLevel,
+              progress: newProgress
+          };
+          
+          if (newSkillLevel > skill.level) {
+              setNotification({ text: `${skill.name} Level Up! Lvl ${newSkillLevel}`, type: 'level' });
+          }
+      }
+
+      // Identity System
+      let newIdentity = prev.identityTitle;
+      if (newLevel >= 10) newIdentity = 'Speaker';
+      if (newLevel >= 50) newIdentity = 'Communicator';
+      if (newLevel >= 100) newIdentity = 'Fluent Hero';
+      if (newLevel >= 500) newIdentity = 'Legend';
+
+      // Prestige Mode Check
+      if (newLevel > 1000) {
+          // Reset to Level 1, keep prestige (maybe add a prestige counter in future)
+          // For now, just cap at 1000 or show a special notification
+          setNotification({ text: "PRESTIGE MODE UNLOCKED! You are a Legend!", type: 'level' });
+          newIdentity = 'Legend';
+      }
+
       if (newLevel > prev.level) {
         setShowLevelUp(true);
       }
 
-      setNotification({ text: `+${amount} XP: ${reason}`, type: 'xp' });
-      setTimeout(() => setNotification(null), 2500);
+      if (!skillType) {
+          setNotification({ text: `+${amount} XP: ${reason}`, type: 'xp' });
+          setTimeout(() => setNotification(null), 2500);
+      }
 
-      return { ...prev, points: newPoints, level: newLevel };
+      return { ...prev, points: newPoints, level: newLevel, skills: newSkills, identityTitle: newIdentity };
     });
   };
 
   const updateRapport = (characterId: string, amount: number) => {
     setStats(prev => {
-      const currentRapport = prev.rapport[characterId] || 0;
+      const currentRapport = prev.rapport?.[characterId] || 0;
       const newRapport = currentRapport + amount;
       return {
         ...prev,
-        rapport: { ...prev.rapport, [characterId]: newRapport }
+        rapport: { ...(prev.rapport || {}), [characterId]: newRapport }
       };
     });
   };
@@ -443,6 +530,28 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotification({ text: "Trade Successful!", type: 'trade' });
     setTimeout(() => setNotification(null), 2500);
     awardPoints(100, "Successful Trade");
+  };
+
+  const grantBadge = (badge: Badge) => {
+      setBadges(prev => {
+          if (prev.some(b => b.id === badge.id)) return prev;
+          const newBadge = { ...badge, earnedAt: new Date().toISOString() };
+          return [...prev, newBadge];
+      });
+      
+      setStats(prev => {
+          if (prev.awardedBadges.includes(badge.id)) return prev;
+          return {
+              ...prev,
+              awardedBadges: [...prev.awardedBadges, badge.id]
+          };
+      });
+
+      // Only show notification if we actually granted it (or just show it anyway, but logic above prevents dupes in state)
+      // We can't easily check if we returned prev above inside this scope without refactoring, 
+      // but showing notification is fine.
+      setNotification({ text: `Badge Unlocked: ${badge.name}!`, type: 'badge' });
+      setTimeout(() => setNotification(null), 3000);
   };
 
   // P2P Trade Logic
@@ -505,7 +614,10 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Update local state if it's the current user
       if (uid === userId) {
           setStats(newStats);
-          setBadges(prev => [premiumBadge, ...prev]);
+          setBadges(prev => {
+              if (prev.some(b => b.id === premiumBadgeId)) return prev;
+              return [premiumBadge, ...prev];
+          });
           setIsPremium(true);
           setNotification({ text: "SUPER PASS UNLOCKED!", type: 'reward' });
       }
@@ -610,11 +722,12 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   return (
     <GamificationContext.Provider value={{ 
       userId, isAdmin, login, logout, isLoading, loadError,
-      stats, badges, quests, tradeOffers, userTrades, awardPoints, completeQuest, updateRapport, claimDailyReward, tradeBadge, sendP2PTrade, respondToP2PTrade, 
+      stats, badges, quests, tradeOffers, userTrades, awardPoints, completeQuest, updateRapport, claimDailyReward, tradeBadge, grantBadge, sendP2PTrade, respondToP2PTrade, 
       unlockPremium, restorePurchases, isPremium, setThemeColor, setAvatar,
       notification, leaderboard, mode, setMode, 
       showLevelUp, closeLevelUp: () => setShowLevelUp(false),
-      isContactOpen, setIsContactOpen, sendAdminMessage, replyToRequest
+      isContactOpen, setIsContactOpen, sendAdminMessage, replyToRequest,
+      focusArea, usageContext, cefrLevel, preferredLanguage, updateProfile
     }}>
       {children}
       

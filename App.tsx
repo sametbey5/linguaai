@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import RoleplayChat from './pages/RoleplayChat';
 import VocabBuilder from './pages/VocabBuilder';
 import GrammarCoach from './pages/GrammarCoach';
+import GrammarLessons from './pages/GrammarLessons';
 import Leaderboard from './pages/Leaderboard';
 import VideoLearning from './pages/VideoLearning';
 import GrammarGalaxy from './pages/GrammarGalaxy';
@@ -19,28 +20,44 @@ import BadgeTrading from './pages/BadgeTrading';
 import AdminPanel from './pages/AdminPanel';
 import UserProfileView from './pages/UserProfileView';
 import Login from './pages/Login';
+import Onboarding from './pages/Onboarding';
+import StoryMode from './pages/StoryMode';
 import { GamificationProvider, useGamification } from './context/GamificationContext';
 
 // Auth Wrapper Component
 const AuthWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { userId } = useGamification();
+  const { userId, focusArea, isLoading } = useGamification();
   
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400">Loading...</div>;
+  }
+
   if (!userId) {
     return <Login />;
+  }
+  
+  // If user hasn't completed onboarding (no focus area selected), redirect them
+  if (!focusArea || focusArea.length === 0) {
+    return <Navigate to="/onboarding" replace />;
   }
   
   return <Layout>{children}</Layout>;
 };
 
 const AppRoutes: React.FC = () => {
+  const { userId } = useGamification();
+
   return (
     <Routes>
+      <Route path="/onboarding" element={userId ? <Onboarding /> : <Login />} />
+      <Route path="/story" element={<AuthWrapper><StoryMode /></AuthWrapper>} />
       <Route path="/" element={<AuthWrapper><Dashboard /></AuthWrapper>} />
       <Route path="/roleplay" element={<AuthWrapper><RoleplayChat /></AuthWrapper>} />
       <Route path="/talk" element={<AuthWrapper><MascotTalk /></AuthWrapper>} />
       <Route path="/talk/:id" element={<AuthWrapper><MascotChat /></AuthWrapper>} />
       <Route path="/vocab" element={<AuthWrapper><VocabBuilder /></AuthWrapper>} />
       <Route path="/grammar" element={<AuthWrapper><GrammarCoach /></AuthWrapper>} />
+      <Route path="/grammar-lessons" element={<AuthWrapper><GrammarLessons /></AuthWrapper>} />
       <Route path="/videos" element={<AuthWrapper><VideoLearning /></AuthWrapper>} />
       <Route path="/leaderboard" element={<AuthWrapper><Leaderboard /></AuthWrapper>} />
       <Route path="/profile/:userId" element={<AuthWrapper><UserProfileView /></AuthWrapper>} />

@@ -40,6 +40,18 @@ export const db = {
       if (!parsed.stats.avatar) {
           parsed.stats.avatar = parsed.mode === 'kids' ? '😎' : '👨‍💼';
       }
+      if (!parsed.stats.skills) {
+          parsed.stats.skills = {
+            vocabulary: { id: 'vocab', name: 'Vocabulary', level: 1, progress: 0, totalXp: 0, icon: '📚', color: 'bg-yellow-500' },
+            speaking: { id: 'speaking', name: 'Speaking', level: 1, progress: 0, totalXp: 0, icon: '🎤', color: 'bg-red-500' },
+            listening: { id: 'listening', name: 'Listening', level: 1, progress: 0, totalXp: 0, icon: '🎧', color: 'bg-blue-500' },
+            grammar: { id: 'grammar', name: 'Grammar', level: 1, progress: 0, totalXp: 0, icon: '🧩', color: 'bg-purple-500' },
+            realLife: { id: 'realLife', name: 'Real Life', level: 1, progress: 0, totalXp: 0, icon: '🌍', color: 'bg-green-500' },
+          };
+      }
+      if (!parsed.stats.identityTitle) {
+          parsed.stats.identityTitle = 'Explorer';
+      }
       if (!parsed.trades) {
           parsed.trades = [];
       }
@@ -281,22 +293,34 @@ export const db = {
       stats: {
         points: 0, 
         level: 1, 
-        messagesSent: 0, 
-        vocabGenerated: 0, 
-        grammarChecks: 0, 
         streakDays: 1, 
         lastLoginDate: new Date().toISOString().split('T')[0],
-        rapport: {},
         claimedDailyReward: false,
         awardedBadges: [],
         themeColor: 'bg-blue-500',
-        avatar: '😎'
+        avatar: '😎',
+        identityTitle: 'Explorer',
+        skills: {
+          vocabulary: { id: 'vocab', name: 'Vocabulary', level: 1, progress: 0, totalXp: 0, icon: '📚', color: 'bg-yellow-500' },
+          speaking: { id: 'speaking', name: 'Speaking', level: 1, progress: 0, totalXp: 0, icon: '🎤', color: 'bg-red-500' },
+          listening: { id: 'listening', name: 'Listening', level: 1, progress: 0, totalXp: 0, icon: '🎧', color: 'bg-blue-500' },
+          grammar: { id: 'grammar', name: 'Grammar', level: 1, progress: 0, totalXp: 0, icon: '🧩', color: 'bg-purple-500' },
+          realLife: { id: 'realLife', name: 'Real Life', level: 1, progress: 0, totalXp: 0, icon: '🌍', color: 'bg-green-500' },
+        },
+        // Legacy
+        messagesSent: 0,
+        vocabGenerated: 0,
+        grammarChecks: 0,
+        rapport: {}
       },
       badges: [],
       quests: INITIAL_QUESTS,
       mode: 'kids',
       trades: [],
-      isPremium: false
+      isPremium: false,
+      focusArea: [],
+      usageContext: '',
+      preferredLanguage: 'Turkish'
     };
   },
 

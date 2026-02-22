@@ -74,19 +74,43 @@ export interface ContactRequest {
   repliedAt?: string;
 }
 
-export interface UserStats {
-  points: number;
+export interface SkillTree {
+  id: string;
+  name: string;
   level: number;
-  messagesSent: number;
-  vocabGenerated: number;
-  grammarChecks: number;
+  progress: number; // 0-100 for current level
+  totalXp: number;
+  icon: string;
+  color: string;
+}
+
+export interface UserStats {
+  points: number; // Global XP (Prestige)
+  level: number; // Global Level (Prestige)
   streakDays: number;
   lastLoginDate: string;
-  rapport: Record<string, number>; // characterId -> points
   claimedDailyReward: boolean;
   awardedBadges: string[];
-  themeColor?: string; // New field for profile color
-  avatar?: string; // New field for profile emoji
+  themeColor?: string;
+  avatar?: string;
+  
+  // New Skill Trees
+  skills: {
+    vocabulary: SkillTree;
+    speaking: SkillTree;
+    listening: SkillTree;
+    grammar: SkillTree;
+    realLife: SkillTree;
+  };
+  
+  // Identity
+  identityTitle: 'Explorer' | 'Speaker' | 'Communicator' | 'Fluent Hero' | 'Legend';
+  
+  // Legacy support
+  messagesSent?: number;
+  vocabGenerated?: number;
+  grammarChecks?: number;
+  rapport?: Record<string, number>;
 }
 
 export interface Quest {
@@ -124,6 +148,10 @@ export interface UserProfile {
   password?: string;
   trades?: UserTrade[]; // Added for P2P trading history
   isPremium?: boolean; // New field for FlutterFlow/RevenueCat integration
+  focusArea?: string[]; // e.g., ['Vocabulary', 'Speaking']
+  usageContext?: string; // e.g., 'Business', 'Travel'
+  cefrLevel?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  preferredLanguage?: string;
 }
 
 // Added Authentication Types
@@ -137,11 +165,12 @@ export interface GamificationContextType {
   quests: Quest[];
   tradeOffers: TradeOffer[];
   userTrades: UserTrade[]; // Added P2P trades list
-  awardPoints: (amount: number, reason: string) => void;
+  awardPoints: (amount: number, reason: string, skillType?: 'vocabulary' | 'speaking' | 'listening' | 'grammar' | 'realLife') => void;
   updateRapport: (characterId: string, amount: number) => void;
   claimDailyReward: () => void;
   completeQuest: (id: string) => void;
   tradeBadge: (offerId: string) => void;
+  grantBadge: (badge: Badge) => void;
   
   // New P2P Trade Functions
   sendP2PTrade: (recipientId: string, badgeToOffer: Badge) => Promise<{success: boolean, msg: string}>;
@@ -164,6 +193,11 @@ export interface GamificationContextType {
   setMode: (mode: AppMode) => void;
   setThemeColor: (color: string) => void;
   setAvatar: (emoji: string) => void;
+  focusArea: string[];
+  usageContext: string;
+  cefrLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  preferredLanguage: string;
+  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
   showLevelUp: boolean;
   closeLevelUp: () => void;
   isLoading: boolean;

@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { checkGrammar } from '../services/geminiService';
 import { GrammarAnalysis } from '../types';
 import Button from '../components/Button';
 import { Sparkles, RefreshCcw, CheckCircle, BrainCircuit, PartyPopper } from 'lucide-react';
@@ -11,28 +10,57 @@ const ScrambleMaster: React.FC = () => {
   const { mode, awardPoints } = useGamification();
   const isKids = mode === 'kids';
 
+  const [level, setLevel] = useState(1);
   const [currentSentence, setCurrentSentence] = useState<string>("");
   const [bubbles, setBubbles] = useState<string[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [isWon, setIsWon] = useState(false);
 
-  const fetchSentence = async () => {
+  // Generate 1000 levels procedurally or use a large dataset
+  const getSentenceForLevel = (lvl: number) => {
+      const subjects = ["The cat", "A dog", "My friend", "The teacher", "Our team", "The robot", "An astronaut", "The wizard", "A dragon", "The scientist"];
+      const verbs = ["jumps over", "runs to", "eats", "studies", "builds", "discovers", "flies to", "protects", "invents", "writes"];
+      const objects = ["the moon", "a bone", "the book", "a castle", "the code", "a new planet", "the treasure", "a letter", "the homework", "a machine"];
+      const adverbs = ["quickly", "slowly", "happily", "carefully", "bravely", "silently", "eagerly", "loudly", "secretly", "magically"];
+      
+      // Simple procedural generation to ensure uniqueness for 1000 levels
+      // Use level as seed
+      const sIndex = (lvl * 3) % subjects.length;
+      const vIndex = (lvl * 7) % verbs.length;
+      const oIndex = (lvl * 5) % objects.length;
+      const aIndex = (lvl * 2) % adverbs.length;
+      
+      // Increase complexity every 100 levels
+      if (lvl < 100) {
+          return `${subjects[sIndex]} ${verbs[vIndex]} ${objects[oIndex]}`;
+      } else if (lvl < 500) {
+          return `${subjects[sIndex]} ${verbs[vIndex]} ${objects[oIndex]} ${adverbs[aIndex]}`;
+      } else {
+          return `${adverbs[aIndex]} ${subjects[sIndex]} ${verbs[vIndex]} ${objects[oIndex]} and ${verbs[(vIndex + 1) % verbs.length]} ${objects[(oIndex + 1) % objects.length]}`;
+      }
+  };
+
+  const fetchSentence = async (nextLevel?: number) => {
     setLoading(true);
     setIsWon(false);
     setSelected([]);
-    // Using simple mock/hardcoded for logic, but in reality could fetch from Gemini
-    const samples = isKids 
-      ? ["I love to play games", "The apple is red", "We go to school", "Can you help me"]
-      : ["Success requires persistence", "Learning is a lifelong journey", "Technology changes the world", "Always be curious and kind"];
     
-    const sample = samples[Math.floor(Math.random() * samples.length)];
+    const targetLevel = nextLevel || level;
+    const sample = getSentenceForLevel(targetLevel);
+    
     setCurrentSentence(sample);
     setBubbles(sample.split(' ').sort(() => Math.random() - 0.5));
     setTimeout(() => setLoading(false), 800);
   };
 
-  useEffect(() => { fetchSentence(); }, []);
+  useEffect(() => { fetchSentence(level); }, []);
+
+  const nextLevel = () => {
+      const next = level + 1;
+      setLevel(next);
+      fetchSentence(next);
+  };
 
   const handleBubbleClick = (word: string, index: number) => {
     setSelected([...selected, word]);
@@ -52,7 +80,7 @@ const ScrambleMaster: React.FC = () => {
     const built = selected.join(' ');
     if (built.toLowerCase() === currentSentence.toLowerCase()) {
       setIsWon(true);
-      awardPoints(100, 'Scramble Master Win');
+      awardPoints(100, 'Scramble Master Win', 'grammar');
     } else {
       alert("Oops! The order is not quite right. Try again! 🧐");
     }
@@ -64,6 +92,7 @@ const ScrambleMaster: React.FC = () => {
       <div className="text-center space-y-4">
         <h2 className="text-5xl font-black text-slate-800 rainbow-text">SCRAMBLE MASTER</h2>
         <p className="text-xl font-bold text-slate-500">Unscramble the sentence! Catch the floating words! 🫧</p>
+        <div className="inline-block bg-fun-blue text-white px-4 py-1 rounded-full font-black text-sm">LEVEL {level} / 1000</div>
       </div>
 
       <div className="bg-white p-12 rounded-[4rem] shadow-2xl border-4 border-slate-100 min-h-[450px] flex flex-col justify-between items-center gap-10 relative overflow-hidden">
@@ -72,7 +101,7 @@ const ScrambleMaster: React.FC = () => {
         {loading ? (
           <div className="flex flex-col items-center gap-4 py-20">
              <BrainCircuit size={80} className="animate-spin text-fun-purple" />
-             <p className="font-black text-fun-purple animate-pulse">PREPARING PUZZLE...</p>
+             <p className="font-black text-fun-purple animate-pulse">PREPARING LEVEL {level}...</p>
           </div>
         ) : isWon ? (
           <div className="text-center py-10 animate-fade-in">
@@ -80,9 +109,9 @@ const ScrambleMaster: React.FC = () => {
                 <PartyPopper size={64} className="text-white animate-bounce" />
              </div>
              <h3 className="text-5xl font-black text-slate-800">AMAZING!</h3>
-             <p className="text-slate-400 font-bold mt-4 text-xl">You solved the puzzle perfectly! +100 XP</p>
+             <p className="text-slate-400 font-bold mt-4 text-xl">You solved Level {level}! +100 XP</p>
              <div className="mt-8 flex flex-col gap-4">
-                <Button onClick={fetchSentence} className="px-12 py-5 text-2xl" variant="success">NEXT LEVEL &rarr;</Button>
+                <Button onClick={nextLevel} className="px-12 py-5 text-2xl" variant="success">NEXT LEVEL &rarr;</Button>
              </div>
           </div>
         ) : (
