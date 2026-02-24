@@ -429,18 +429,9 @@ export const db = {
       if (error && error.code === '42703') { // column does not exist (e.g. created_at)
         const retry = await supabase
           .from('notifications')
-          .select('*')
-          .order('createdAt', { ascending: false });
+          .select('*');
         data = retry.data;
         error = retry.error;
-
-        if (error && error.code === '42703') {
-          const fallbackRetry = await supabase
-            .from('notifications')
-            .select('*');
-          data = fallbackRetry.data;
-          error = fallbackRetry.error;
-        }
       }
 
       if (error) {
@@ -464,56 +455,42 @@ export const db = {
   async addNotification(notification: any): Promise<{success: boolean, msg?: string}> {
     try {
       const now = new Date().toISOString();
-      const payloads = [
-        {
+      let { error } = await supabase
+        .from('notifications')
+        .insert({
           title: notification.title,
           message: notification.message,
           type: notification.type,
           is_global: notification.isGlobal ?? true,
-          created_at: now,
-        },
-        {
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          isGlobal: notification.isGlobal ?? true,
-          createdAt: now,
-        },
-        {
-          id: crypto.randomUUID(),
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          is_global: notification.isGlobal ?? true,
-          created_at: now,
-        },
-        {
-          id: crypto.randomUUID(),
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          isGlobal: notification.isGlobal ?? true,
-          createdAt: now,
-        },
-        {
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-        },
-      ];
-
-      let lastError: any = null;
-      for (const payload of payloads) {
-        const { error } = await supabase.from('notifications').insert(payload);
-        if (!error) {
-          return { success: true };
-        }
-
-        lastError = error;
-        if (error.code === '42501') break; // permission denied/RLS, no point retrying schema variants
+          created_at: now
+        });
+      
+      if (error && error.code === '42703') { // column does not exist
+        const { error: retryError } = await supabase
+          .from('notifications')
+          .insert({
+            title: notification.title,
+            message: notification.message,
+            type: notification.type
+          });
+        if (retryError) throw retryError;
+        return { success: true };
+      } else if (error && error.code === '23502') { // not null violation (e.g. id)
+        const { error: retryError } = await supabase
+          .from('notifications')
+          .insert({
+            id: crypto.randomUUID(),
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            is_global: notification.isGlobal ?? true,
+            created_at: now
+          });
+        if (retryError) throw retryError;
+        return { success: true };
       }
 
-      if (lastError) throw lastError;
+      if (error) throw error;
       return { success: true };
     } catch (e: any) {
       console.error("Failed to add notification", e);
