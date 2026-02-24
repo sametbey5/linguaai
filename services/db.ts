@@ -58,11 +58,39 @@ export const db = {
       if (parsed.isPremium === undefined) {
           parsed.isPremium = false;
       }
+      if (!parsed.email) {
+          parsed.email = '';
+      }
       
       return parsed;
     } catch (e) {
       console.error("Database read exception", e);
       throw e;
+    }
+  },
+
+  /**
+   * Find user by email
+   */
+  async getUserByEmail(email: string): Promise<{ id: string; profile: UserProfile } | null> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, data')
+        .eq('data->>email', email);
+
+      if (error) {
+        console.error("Supabase email search error", error);
+        return null;
+      }
+
+      if (data && data.length > 0) {
+        return { id: data[0].id, profile: data[0].data };
+      }
+      return null;
+    } catch (e) {
+      console.error("Database email search exception", e);
+      return null;
     }
   },
 
@@ -385,5 +413,103 @@ export const db = {
       } catch (e) {
           return [];
       }
+  },
+
+  /**
+   * Global Notifications System
+   * Uses the notifications table
+   */
+  async getGlobalNotifications(): Promise<any[]> {
+    try {
+      let { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error && error.code === '42703') { // column does not exist (e.g. created_at)
+        const retry = await supabase
+          .from('notifications')
+          .select('*');
+        data = retry.data;
+        error = retry.error;
+      }
+
+      if (error) {
+        if (error.code === '42P01') return []; // table does not exist
+        throw error;
+      }
+      return data?.map(n => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        isGlobal: n.is_global ?? true,
+        createdAt: n.created_at || n.createdAt || new Date().toISOString()
+      })) || [];
+    } catch (e) {
+      console.error("Failed to fetch notifications", e);
+      return [];
+    }
+  },
+
+  async addNotification(notification: any): Promise<{success: boolean, msg?: string}> {
+    try {
+      const now = new Date().toISOString();
+      let { error } = await supabase
+        .from('notifications')
+        .insert({
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          is_global: notification.isGlobal ?? true,
+          created_at: now
+        });
+      
+      if (error && error.code === '42703') { // column does not exist
+        const { error: retryError } = await supabase
+          .from('notifications')
+          .insert({
+            title: notification.title,
+            message: notification.message,
+            type: notification.type
+          });
+        if (retryError) throw retryError;
+        return { success: true };
+      } else if (error && error.code === '23502') { // not null violation (e.g. id)
+        const { error: retryError } = await supabase
+          .from('notifications')
+          .insert({
+            id: crypto.randomUUID(),
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            is_global: notification.isGlobal ?? true,
+            created_at: now
+          });
+        if (retryError) throw retryError;
+        return { success: true };
+      }
+
+      if (error) throw error;
+      return { success: true };
+    } catch (e: any) {
+      console.error("Failed to add notification", e);
+      return { success: false, msg: e.message || 'Unknown error' };
+    }
+  },
+
+  async deleteNotification(id: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error("Failed to delete notification", e);
+      return false;
+    }
   }
 };

@@ -122,8 +122,22 @@ const GrammarLessons: React.FC = () => {
     return (
       <div className="max-w-6xl mx-auto space-y-8 animate-fade-in pb-20">
         <div className="text-center space-y-4">
-          <h2 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight uppercase">{t('grammar_academy')}</h2>
-          <p className="text-xl font-bold text-slate-500">{t('master_english')}</p>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight uppercase">
+            Grammar Academy
+            {preferredLanguage && preferredLanguage !== 'English' && (
+              <span className="block text-2xl text-fun-blue mt-2 opacity-80">
+                {t('grammar_academy')}
+              </span>
+            )}
+          </h2>
+          <p className="text-xl font-bold text-slate-500">
+            Master English from A1 to C2! 🎓
+            {preferredLanguage && preferredLanguage !== 'English' && (
+              <span className="block text-sm text-slate-400 mt-1">
+                {t('master_english')}
+              </span>
+            )}
+          </p>
           {preferredLanguage && (
             <div className="inline-block bg-slate-100 text-slate-500 px-4 py-1 rounded-full text-sm font-bold mt-2">
               🌍 {t('support_language')}: {preferredLanguage}
@@ -131,7 +145,7 @@ const GrammarLessons: React.FC = () => {
           )}
           <div className="flex justify-center mt-4">
              <Button onClick={() => navigate('/grammar')} variant="secondary" className="px-6 py-2 text-sm">
-                {t('play_scramble')} 🎮
+                Play Scramble Game {preferredLanguage && preferredLanguage !== 'English' && <span className="ml-1 opacity-70">({t('play_scramble')})</span>} 🎮
              </Button>
           </div>
         </div>
@@ -233,7 +247,7 @@ const GrammarLessons: React.FC = () => {
     return (
       <div className="max-w-3xl mx-auto animate-fade-in pb-20">
         <button onClick={handleBackToList} className="flex items-center text-slate-400 hover:text-slate-600 font-bold mb-6 transition-colors">
-          <ArrowLeft size={20} className="mr-2" /> {t('back')}
+          <ArrowLeft size={20} className="mr-2" /> Back {preferredLanguage && preferredLanguage !== 'English' && <span className="ml-1 opacity-70">({t('back')})</span>}
         </button>
         
         <div className="bg-white p-8 md:p-12 rounded-[3rem] border-4 border-slate-100 shadow-xl">
@@ -262,7 +276,7 @@ const GrammarLessons: React.FC = () => {
 
           <div className="mt-12 flex justify-end">
             <Button onClick={handleStartQuiz} className="px-8 py-4 text-lg" icon={<Sparkles size={24} />}>
-              {t('start_practice')}
+              Start Practice {preferredLanguage && preferredLanguage !== 'English' && <span className="ml-1 opacity-70">({t('start_practice')})</span>}
             </Button>
           </div>
         </div>

@@ -2,9 +2,10 @@
 import React, { ReactNode, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { Menu, X, LayoutDashboard, MessageCircle, BookOpen, PenTool, Trophy, Gamepad2, Briefcase, MonitorPlay, Crown, Store, ArrowRightLeft, LogOut, User, HelpCircle } from 'lucide-react';
+import { Menu, X, LayoutDashboard, MessageCircle, BookOpen, PenTool, Trophy, Gamepad2, Briefcase, MonitorPlay, Crown, Store, ArrowRightLeft, LogOut, User, HelpCircle, Globe, ChevronDown, Bell } from 'lucide-react';
 import { useGamification } from '../context/GamificationContext';
 import ContactModal from './ContactModal';
+import { SUPPORTED_LANGUAGES } from '../constants';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,11 +13,18 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { mode, userId, logout, setIsContactOpen } = useGamification();
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const { mode, userId, logout, setIsContactOpen, preferredLanguage, updateProfile } = useGamification();
   const isKids = mode === 'kids';
+
+  const handleLanguageChange = async (lang: string) => {
+    await updateProfile({ preferredLanguage: lang });
+    setIsLangMenuOpen(false);
+  };
 
   const navItems = [
     { name: isKids ? 'My Dashboard' : 'Dashboard', path: '/', icon: <LayoutDashboard size={24} />, color: isKids ? 'text-fun-blue' : 'text-slate-600' },
+    { name: isKids ? 'News' : 'Notifications', path: '/notifications', icon: <Bell size={24} />, color: isKids ? 'text-fun-orange' : 'text-slate-600' },
     { name: isKids ? 'Chat Games' : 'Roleplay', path: '/roleplay', icon: <MessageCircle size={24} />, color: isKids ? 'text-fun-pink' : 'text-slate-600' },
     { name: isKids ? 'Word Cards' : 'Vocabulary', path: '/vocab', icon: <BookOpen size={24} />, color: isKids ? 'text-fun-green' : 'text-slate-600' },
     { name: isKids ? 'Word Fixer' : 'Grammar', path: isKids ? '/grammar' : '/grammar-lessons', icon: <PenTool size={24} />, color: isKids ? 'text-fun-purple' : 'text-slate-600' },
@@ -121,7 +129,38 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </nav>
 
             {/* Mobile Footer with Logout */}
-            <div className={`mt-6 pt-6 border-t ${isKids ? 'border-slate-100' : 'border-slate-200'}`}>
+            <div className={`mt-6 pt-6 border-t ${isKids ? 'border-slate-100' : 'border-slate-200'} space-y-6`}>
+                {/* Language Switcher Mobile */}
+                <div className="relative">
+                    <button 
+                        onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                        className={`w-full flex items-center justify-between px-5 py-3 rounded-2xl border-2 transition-all ${
+                            isKids ? 'bg-slate-50 border-slate-100 text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-600'
+                        } font-bold text-sm`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Globe size={18} className="text-fun-blue" />
+                            <span>{preferredLanguage || 'Turkish'}</span>
+                        </div>
+                        <ChevronDown size={18} className={`transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {isLangMenuOpen && (
+                        <div className="absolute bottom-full left-0 w-full mb-2 bg-white border-4 border-slate-100 rounded-2xl shadow-2xl overflow-hidden z-50 max-h-48 overflow-y-auto">
+                            {SUPPORTED_LANGUAGES.map(lang => (
+                                <button
+                                    key={lang.code}
+                                    onClick={() => handleLanguageChange(lang.name)}
+                                    className="w-full px-5 py-3 text-left text-sm font-bold text-slate-500 hover:bg-blue-50 hover:text-fun-blue flex items-center gap-3 transition-colors"
+                                >
+                                    <span className="text-xl">{lang.flag}</span>
+                                    <span>{lang.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
                 <div className="flex items-center justify-between">
                    <div className="flex items-center gap-3 overflow-hidden max-w-[50%]">
                       <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${isKids ? 'bg-slate-100 text-slate-400' : 'bg-slate-200 text-slate-600'}`}>
@@ -147,7 +186,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}
 
       {/* Main Content Area - Reduced padding for Pro mode */}
-      <main className={`md:ml-${isKids ? '72' : '64'} p-4 md:p-${isKids ? '10' : '8'} max-w-7xl mx-auto transition-all`}>
+      <main className={`md:ml-${isKids ? '72' : '64'} p-3 sm:p-4 md:p-${isKids ? '10' : '8'} max-w-7xl mx-auto transition-all`}>
         {children}
       </main>
     </div>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useGamification } from '../context/GamificationContext';
 import Button from '../components/Button';
-import { ShieldCheck, Award, User, RefreshCw, CheckCircle, AlertTriangle, MessageSquare, Mail, Reply, Send } from 'lucide-react';
+import { ShieldCheck, Award, User, RefreshCw, CheckCircle, AlertTriangle, MessageSquare, Mail, Reply, Send, Bell, Plus, Trash2, Info, Sparkles, Gift, Calendar } from 'lucide-react';
 import { db } from '../services/db';
-import { Badge, ContactRequest } from '../types';
+import { Badge, ContactRequest, AppNotification } from '../types';
 
 interface MessageItemProps {
   msg: ContactRequest;
@@ -100,10 +100,10 @@ const MessageItem: React.FC<MessageItemProps> = ({ msg, onReply }) => {
 };
 
 const AdminPanel: React.FC = () => {
-  const { isAdmin, mode } = useGamification();
+  const { isAdmin, mode, appNotifications, addAppNotification, deleteAppNotification } = useGamification();
   const isKids = mode === 'kids';
 
-  const [activeTab, setActiveTab] = useState<'badges' | 'messages'>('badges');
+  const [activeTab, setActiveTab] = useState<'badges' | 'messages' | 'notifications'>('badges');
   
   // Badge State
   const [targetUser, setTargetUser] = useState('');
@@ -116,6 +116,13 @@ const AdminPanel: React.FC = () => {
 
   // Message State
   const [messages, setMessages] = useState<ContactRequest[]>([]);
+
+  // Notification State
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifType, setNotifType] = useState<'info' | 'update' | 'event' | 'reward'>('info');
+  const [isReleasing, setIsReleasing] = useState(false);
+  const [notifError, setNotifError] = useState<string | null>(null);
 
   const fetchMessages = () => {
       db.getContactRequests().then(setMessages);
@@ -205,6 +212,12 @@ const AdminPanel: React.FC = () => {
                   className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'messages' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
                >
                    Messages
+               </button>
+               <button 
+                  onClick={() => setActiveTab('notifications')}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'notifications' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+               >
+                   Notifications
                </button>
            </div>
        </div>
@@ -368,7 +381,125 @@ const AdminPanel: React.FC = () => {
                )}
            </div>
        )}
-    </div>
+
+       {activeTab === 'notifications' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="bg-white p-8 rounded-[2rem] shadow-xl border-4 border-slate-100">
+                    <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-2">
+                        <Bell className="text-fun-blue" /> Release Notification
+                    </h3>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Title</label>
+                            <input 
+                                value={notifTitle}
+                                onChange={e => setNotifTitle(e.target.value)}
+                                placeholder="e.g. New Event Starting!"
+                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl py-3 px-4 font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Message</label>
+                            <textarea 
+                                value={notifMessage}
+                                onChange={e => setNotifMessage(e.target.value)}
+                                placeholder="Tell users what's happening..."
+                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl py-3 px-4 font-medium text-slate-600 outline-none focus:border-fun-blue transition-colors h-32 resize-none"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Type</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { id: 'info', icon: <Info size={16}/>, label: 'Info' },
+                                    { id: 'update', icon: <Sparkles size={16}/>, label: 'Update' },
+                                    { id: 'reward', icon: <Gift size={16}/>, label: 'Reward' },
+                                    { id: 'event', icon: <Calendar size={16}/>, label: 'Event' }
+                                ].map(type => (
+                                    <button
+                                        key={type.id}
+                                        onClick={() => setNotifType(type.id as any)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all ${
+                                            notifType === type.id 
+                                            ? 'bg-fun-blue border-fun-blue text-white shadow-md' 
+                                            : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        {type.icon} {type.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="pt-4">
+                            {notifError && (
+                                <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl border border-red-200 text-sm font-bold flex items-center gap-2">
+                                    <AlertTriangle size={16} />
+                                    {notifError}
+                                </div>
+                            )}
+                            <Button 
+                                onClick={async () => {
+                                    setIsReleasing(true);
+                                    setNotifError(null);
+                                    const result = await addAppNotification({
+                                        title: notifTitle,
+                                        message: notifMessage,
+                                        type: notifType,
+                                        isGlobal: true
+                                    });
+                                    setIsReleasing(false);
+                                    if (result.success) {
+                                        setNotifTitle('');
+                                        setNotifMessage('');
+                                    } else {
+                                        setNotifError(result.msg || 'Failed to release notification. Check database permissions.');
+                                    }
+                                }}
+                                variant="primary" 
+                                className="w-full justify-center py-4 text-lg" 
+                                isLoading={isReleasing}
+                                disabled={!notifTitle || !notifMessage}
+                            >
+                                <Plus className="mr-2" /> Release to All Users
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2rem] shadow-xl border-4 border-slate-100">
+                    <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-2">
+                        <RefreshCw className="text-fun-blue" /> Active Notifications
+                    </h3>
+
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                        {appNotifications.length === 0 ? (
+                            <p className="text-center py-10 text-slate-400 font-bold italic">No active notifications.</p>
+                        ) : (
+                            appNotifications.map(n => (
+                                <div key={n.id} className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 flex justify-between items-start gap-4">
+                                    <div>
+                                        <h4 className="font-black text-slate-800">{n.title}</h4>
+                                        <p className="text-xs text-slate-500 line-clamp-2">{n.message}</p>
+                                        <span className="text-[10px] font-bold text-fun-blue uppercase mt-2 block">{n.type}</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => deleteAppNotification(n.id)}
+                                        className="text-slate-300 hover:text-red-500 transition-colors"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            </div>
+        )}
+     </div>
   );
 };
 

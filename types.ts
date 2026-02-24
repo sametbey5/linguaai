@@ -33,6 +33,7 @@ export interface GrammarAnalysis {
   corrected: string;
   explanation: string;
   score: number;
+  examples?: string[];
 }
 
 export interface Badge {
@@ -146,6 +147,8 @@ export interface UserProfile {
   quests: Quest[];
   mode: AppMode;
   password?: string;
+  email?: string;
+  resetCode?: string;
   trades?: UserTrade[]; // Added for P2P trading history
   isPremium?: boolean; // New field for FlutterFlow/RevenueCat integration
   focusArea?: string[]; // e.g., ['Vocabulary', 'Speaking']
@@ -154,11 +157,20 @@ export interface UserProfile {
   preferredLanguage?: string;
 }
 
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'update' | 'event' | 'reward';
+  createdAt: string;
+  isGlobal: boolean;
+}
+
 // Added Authentication Types
 export interface GamificationContextType {
   userId: string | null;
   isAdmin: boolean;
-  login: (id: string, password?: string, isSignUp?: boolean) => Promise<boolean>;
+  login: (id: string, password?: string, isSignUp?: boolean, email?: string) => Promise<boolean>;
   logout: () => void;
   stats: UserStats;
   badges: Badge[];
@@ -170,6 +182,7 @@ export interface GamificationContextType {
   claimDailyReward: () => void;
   completeQuest: (id: string) => void;
   tradeBadge: (offerId: string) => void;
+  refreshTradeOffers: () => void;
   grantBadge: (badge: Badge) => void;
   
   // New P2P Trade Functions
@@ -188,6 +201,9 @@ export interface GamificationContextType {
   replyToRequest: (requestId: string, reply: string) => Promise<boolean>;
   
   notification: { text: string; type: 'xp' | 'level' | 'badge' | 'reward' | 'trade' } | null;
+  appNotifications: AppNotification[];
+  addAppNotification: (notif: Omit<AppNotification, 'id' | 'createdAt'>) => Promise<{success: boolean, msg?: string}>;
+  deleteAppNotification: (id: string) => Promise<boolean>;
   leaderboard: LeaderboardEntry[];
   mode: AppMode;
   setMode: (mode: AppMode) => void;
@@ -197,7 +213,11 @@ export interface GamificationContextType {
   usageContext: string;
   cefrLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
   preferredLanguage: string;
+  email: string;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; msg: string }>;
+  verifyResetCode: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; msg: string }>;
+  changeUsername: (newUsername: string) => Promise<{ success: boolean; msg: string }>;
   showLevelUp: boolean;
   closeLevelUp: () => void;
   isLoading: boolean;

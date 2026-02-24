@@ -7,11 +7,18 @@ import Confetti from '../components/Confetti';
 import { Badge, UserTrade } from '../types';
 
 const BadgeTrading: React.FC = () => {
-  const { mode, badges, tradeOffers, tradeBadge, userId, userTrades, sendP2PTrade, respondToP2PTrade } = useGamification();
+  const { mode, badges, tradeOffers, tradeBadge, userId, userTrades, sendP2PTrade, respondToP2PTrade, refreshTradeOffers } = useGamification();
   const isKids = mode === 'kids';
   
   const [activeTab, setActiveTab] = useState<'npc' | 'p2p'>('npc');
   const [justTraded, setJustTraded] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    refreshTradeOffers();
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
   
   // Create Trade State
   const [recipientId, setRecipientId] = useState('');
@@ -144,8 +151,16 @@ const BadgeTrading: React.FC = () => {
       
       <div className="text-center space-y-4">
         <div className="inline-block relative">
-           <Store size={80} className="text-fun-orange mx-auto animate-bounce-slow" />
+           <button 
+             onClick={handleRefresh}
+             className={`transition-all duration-500 ${isRefreshing ? 'rotate-180 scale-125' : 'hover:scale-110'}`}
+           >
+              <Store size={80} className="text-fun-orange mx-auto animate-bounce-slow" />
+           </button>
            <div className="absolute -top-2 -right-4 bg-fun-green text-white px-3 py-1 rounded-full text-xs font-black rotate-12 shadow-md">OPEN!</div>
+           <div className="absolute -bottom-2 -left-4 bg-fun-blue text-white px-2 py-1 rounded-full text-[8px] font-black -rotate-12 shadow-sm flex items-center gap-1">
+              <RefreshCcw size={10} /> REFRESH
+           </div>
         </div>
         <h2 className={`text-5xl font-black ${isKids ? 'text-slate-800 rainbow-text' : 'text-slate-800'} tracking-tight`}>
            TRADING POST

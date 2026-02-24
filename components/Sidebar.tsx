@@ -1,23 +1,9 @@
 
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, MessageCircle, BookOpen, PenTool, Trophy, Gamepad2, Briefcase, Zap, Sword, Brain, MonitorPlay, BarChart3, Settings, Mic, Crown, Store, ArrowRightLeft, LogOut, User, ShieldCheck, HelpCircle, Globe, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, BookOpen, PenTool, Trophy, Gamepad2, Briefcase, Zap, Sword, Brain, MonitorPlay, BarChart3, Settings, Mic, Crown, Store, ArrowRightLeft, LogOut, User, ShieldCheck, HelpCircle, Globe, ChevronDown, GraduationCap, Volume2, Bell } from 'lucide-react';
 import { useGamification } from '../context/GamificationContext';
-
-const SUPPORTED_LANGUAGES = [
-  { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
-  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-  { code: 'fr', name: 'French', flag: '🇫🇷' },
-  { code: 'de', name: 'German', flag: '🇩🇪' },
-  { code: 'it', name: 'Italian', flag: '🇮🇹' },
-  { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
-  { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-  { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-  { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
-  { code: 'ko', name: 'Korean', flag: '🇰🇷' },
-  { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-  { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
-];
+import { SUPPORTED_LANGUAGES } from '../constants';
 
 const Sidebar: React.FC = () => {
   const { mode, setMode, userId, logout, isAdmin, setIsContactOpen, preferredLanguage, updateProfile } = useGamification();
@@ -26,10 +12,13 @@ const Sidebar: React.FC = () => {
 
   const navItems = [
     { name: isKids ? 'Arcade Home' : 'Overview', path: '/', icon: <LayoutDashboard size={isKids ? 24 : 20} />, color: 'text-fun-blue' },
+    { name: isKids ? 'News' : 'Notifications', path: '/notifications', icon: <Bell size={isKids ? 24 : 20} />, color: 'text-fun-orange' },
     { name: isKids ? 'Quest Mode' : 'Scenarios', path: '/roleplay', icon: isKids ? <Sword size={24} /> : <MessageCircle size={20} />, color: 'text-fun-pink' },
     { name: isKids ? 'Talk to Friend' : 'Live Conversation', path: '/talk', icon: <Mic size={isKids ? 24 : 20} />, color: 'text-fun-green' }, 
+    { name: isKids ? 'Speak Clear' : 'Pronunciation', path: '/pronunciation', icon: <Volume2 size={isKids ? 24 : 20} />, color: 'text-fun-blue' },
     { name: isKids ? 'Word Rush' : 'Vocabulary', path: '/vocab', icon: isKids ? <Zap size={24} /> : <BookOpen size={20} />, color: 'text-fun-yellow' },
-    { name: isKids ? 'Scramble' : 'Grammar', path: isKids ? '/grammar' : '/grammar-lessons', icon: isKids ? <Brain size={24} /> : <PenTool size={20} />, color: 'text-fun-purple' },
+    { name: isKids ? 'Grammar Coach' : 'AI Coach', path: '/grammar', icon: <GraduationCap size={isKids ? 24 : 20} />, color: 'text-fun-purple' },
+    { name: isKids ? 'Scramble' : 'Grammar Lessons', path: isKids ? '/game/scramble' : '/grammar-lessons', icon: isKids ? <Brain size={24} /> : <PenTool size={20} />, color: 'text-fun-purple' },
     { name: isKids ? 'TV Time' : 'Video Content', path: '/videos', icon: <MonitorPlay size={isKids ? 24 : 20} />, color: 'text-fun-orange' },
     { name: isKids ? 'Trading Post' : 'Exchange', path: '/trading', icon: isKids ? <Store size={24} /> : <ArrowRightLeft size={20} />, color: 'text-teal-500' },
     { name: isKids ? 'Leaderboard' : 'Analytics', path: '/leaderboard', icon: isKids ? <Trophy size={24} /> : <BarChart3 size={20} />, color: 'text-fun-green' },
@@ -92,6 +81,16 @@ const Sidebar: React.FC = () => {
                 <HelpCircle size={20} className="mr-3" />
                 Support
              </button>
+
+             <NavLink
+               to="/settings"
+               className={({ isActive }) => 
+                 `flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-slate-700 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}`
+               }
+             >
+                <Settings size={20} className="mr-3" />
+                Account Settings
+             </NavLink>
 
              {isAdmin && (
                <NavLink
@@ -226,6 +225,22 @@ const Sidebar: React.FC = () => {
             </span>
             ASK FOR HELP
         </button>
+
+        <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `flex items-center px-6 py-4 transition-all duration-200 group text-lg font-black rounded-3xl border-4 ${
+                isActive 
+                  ? 'bg-slate-50 text-slate-800 border-slate-200 shadow-sm' 
+                  : 'text-slate-400 border-transparent hover:bg-slate-50 hover:text-slate-500 hover:scale-105'
+              }`
+            }
+          >
+            <span className="mr-4">
+              <Settings size={24} />
+            </span>
+            SETTINGS
+        </NavLink>
 
         {isAdmin && (
            <NavLink

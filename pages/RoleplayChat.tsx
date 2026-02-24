@@ -154,18 +154,32 @@ const QuestAdventure: React.FC = () => {
 
   if (!selectedQuest) {
     return (
-      <div className="max-w-5xl mx-auto space-y-12 animate-fade-in py-10">
+      <div className="max-w-5xl mx-auto space-y-8 sm:space-y-12 animate-fade-in py-6 sm:py-10 px-4">
         <div className="text-center space-y-4">
-           <h2 className="text-6xl font-black text-slate-800 uppercase tracking-tighter">{t('ai_adventures')}</h2>
-           <p className="text-xl font-bold text-slate-500">{t('embark_quests')}</p>
+           <h2 className="text-4xl sm:text-6xl font-black text-slate-800 uppercase tracking-tighter">
+             AI ADVENTURES
+             {preferredLanguage && preferredLanguage !== 'English' && (
+               <span className="block text-xl sm:text-2xl text-fun-blue mt-2 opacity-80">
+                 {t('ai_adventures')}
+               </span>
+             )}
+           </h2>
+           <p className="text-lg sm:text-xl font-bold text-slate-500">
+             Embark on epic quests. Your English is your weapon!
+             {preferredLanguage && preferredLanguage !== 'English' && (
+               <span className="block text-xs sm:text-sm text-slate-400 mt-1 italic">
+                 {t('embark_quests')}
+               </span>
+             )}
+           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
            {quests.map(q => (
-             <div key={q.id} onClick={() => startQuest(q)} className={`p-8 bg-white rounded-[3rem] shadow-2xl border-b-[12px] border-slate-100 cursor-pointer hover:scale-105 active:scale-95 transition-all group overflow-hidden relative`}>
+             <div key={q.id} onClick={() => startQuest(q)} className={`p-6 sm:p-8 bg-white rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl border-b-[8px] sm:border-b-[12px] border-slate-100 cursor-pointer hover:scale-105 active:scale-95 transition-all group overflow-hidden relative`}>
                 <div className="flex justify-between items-start z-10 relative">
                    <div>
-                      <h3 className="text-3xl font-black text-slate-800">{q.title}</h3>
+                      <h3 className="text-2xl sm:text-3xl font-black text-slate-800">{q.title}</h3>
                       {preferredLanguage && preferredLanguage !== 'English' && (
                         <p className="text-fun-blue font-bold text-sm mt-1 flex items-center gap-1">
                           <Globe size={14} /> {translateScenario(q.id, 'title', '')}
@@ -193,54 +207,59 @@ const QuestAdventure: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-160px)] flex gap-6 max-w-7xl mx-auto animate-fade-in">
+    <div className="h-[calc(100vh-120px)] sm:h-[calc(100vh-160px)] flex flex-col lg:flex-row gap-4 sm:gap-6 max-w-7xl mx-auto animate-fade-in px-2 sm:px-4">
       {/* Game View */}
-      <div className="flex-1 bg-white rounded-[3rem] border-4 border-slate-100 shadow-2xl flex flex-col overflow-hidden">
-        <header className="p-6 bg-slate-900 text-white flex justify-between items-center px-10">
-           <button onClick={() => setSelectedQuest(null)} className="hover:bg-white/10 p-2 rounded-xl"><ChevronLeft size={32}/></button>
-           <div className="flex items-center gap-6">
+      <div className="flex-1 bg-white rounded-[2rem] sm:rounded-[3rem] border-4 border-slate-100 shadow-2xl flex flex-col overflow-hidden">
+        <header className="p-4 sm:p-6 bg-slate-900 text-white flex justify-between items-center px-6 sm:px-10">
+           <button onClick={() => setSelectedQuest(null)} className="hover:bg-white/10 p-1 sm:p-2 rounded-xl"><ChevronLeft size={24} className="sm:w-8 sm:h-8"/></button>
+           <div className="flex items-center gap-3 sm:gap-6">
               <div className="flex gap-1">
                  {[...Array(3)].map((_, i) => (
-                   <Heart key={i} size={24} className={i < health ? "text-fun-pink fill-current" : "text-white/20"} />
+                   <Heart key={i} size={18} className={`${i < health ? "text-fun-pink fill-current" : "text-white/20"} sm:w-6 sm:h-6`} />
                  ))}
               </div>
-              <div className="h-8 w-px bg-white/20" />
+              <div className="h-6 sm:h-8 w-px bg-white/20" />
               <div className="flex items-center gap-2">
-                 <Zap className="text-fun-yellow fill-current" size={24} />
-                 <span className="font-black">LVL 1</span>
+                 <Zap className="text-fun-yellow fill-current sm:w-6 sm:h-6" size={18} />
+                 <span className="font-black text-sm sm:text-base">LVL 1</span>
               </div>
            </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-10 space-y-6 bg-slate-50/50">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-10 space-y-4 sm:space-y-6 bg-slate-50/50">
            {messages.map(msg => (
              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-6 rounded-3xl font-bold text-lg shadow-lg ${msg.role === 'user' ? 'bg-fun-blue text-white' : 'bg-white border-2 border-slate-100 text-slate-800'}`}>
+                <div className={`max-w-[90%] sm:max-w-[80%] p-4 sm:p-6 rounded-2xl sm:rounded-3xl font-bold text-base sm:text-lg shadow-lg ${msg.role === 'user' ? 'bg-fun-blue text-white' : 'bg-white border-2 border-slate-100 text-slate-800'}`}>
                    {msg.text}
                 </div>
              </div>
            ))}
             {health <= 0 && (
-             <div className="bg-red-500 text-white p-10 rounded-3xl text-center font-black text-2xl animate-wiggle">
-                {t('wrong')} YOUR ENGLISH WASN'T STRONG ENOUGH.
+             <div className="bg-red-500 text-white p-6 sm:p-10 rounded-2xl sm:rounded-3xl text-center font-black text-xl sm:text-2xl animate-wiggle">
+                YOU DIED! YOUR ENGLISH WASN'T STRONG ENOUGH.
+                {preferredLanguage && preferredLanguage !== 'English' && (
+                  <span className="block text-sm mt-2 opacity-80">({t('wrong')})</span>
+                )}
                 {/* Fixed missing Button component by adding missing import */}
-                <Button onClick={() => startQuest(selectedQuest)} className="mt-4 block mx-auto" variant="secondary">{t('try_again')}</Button>
+                <Button onClick={() => startQuest(selectedQuest)} className="mt-4 block mx-auto" variant="secondary">
+                  TRY AGAIN {preferredLanguage && preferredLanguage !== 'English' && <span className="text-sm ml-2 opacity-70">({t('try_again')})</span>}
+                </Button>
              </div>
            )}
            <div ref={messagesEndRef} />
         </div>
 
-        <form onSubmit={handleAction} className="p-8 border-t-4 border-slate-50 bg-white">
-           <div className="flex gap-4">
+        <form onSubmit={handleAction} className="p-4 sm:p-8 border-t-4 border-slate-50 bg-white">
+           <div className="flex gap-2 sm:gap-4">
               <input 
                 disabled={health <= 0 || isLoading}
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
                 placeholder="What will you do next?"
-                className="flex-1 p-5 rounded-3xl border-4 border-slate-100 focus:border-fun-blue outline-none font-bold text-xl"
+                className="flex-1 p-3 sm:p-5 rounded-2xl sm:rounded-3xl border-4 border-slate-100 focus:border-fun-blue outline-none font-bold text-lg sm:text-xl"
               />
-              <button disabled={health <= 0 || isLoading} className="bg-fun-blue text-white w-20 rounded-3xl flex items-center justify-center shadow-xl border-b-8 border-sky-700 active:translate-y-1 active:border-b-0 transition-all">
-                 <Send size={32} />
+              <button disabled={health <= 0 || isLoading} className="bg-fun-blue text-white w-16 sm:w-20 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-xl border-b-4 sm:border-b-8 border-sky-700 active:translate-y-1 active:border-b-0 transition-all">
+                 <Send size={24} className="sm:w-8 sm:h-8" />
               </button>
            </div>
         </form>

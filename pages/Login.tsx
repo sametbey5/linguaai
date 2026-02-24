@@ -2,46 +2,65 @@
 import React, { useState } from 'react';
 import { useGamification } from '../context/GamificationContext';
 import Button from '../components/Button';
-import { User, Rocket, Gamepad2, Briefcase, Lock, Key } from 'lucide-react';
+import { User, Rocket, Gamepad2, Briefcase, Lock, Key, Mail, ArrowLeft, ShieldCheck } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login } = useGamification();
+  const { login, requestPasswordReset, verifyResetCode } = useGamification();
   const [inputName, setInputName] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'reset-request' | 'reset-verify'>('login');
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputName.trim() || !password.trim()) return;
-    
-    setIsSubmitting(true);
     setError(null);
-
-    try {
-      // Normalize ID: simple lowercase replacement for consistency
-      const userId = inputName.trim().toLowerCase().replace(/\s+/g, '_');
-      const success = await login(userId, password, isSignUp);
-      
-      if (!success) {
-        // Error handling is mostly done in context and logged, but context sets loadError. 
-        // We can also catch specific returns here if needed, but context handles state.
-        // Wait, context returns boolean.
-        // We need to read the error from context? Context has loadError state.
-        // Let's just rely on the loadError if it fails.
-      }
-    } catch (err) {
-      console.error(err);
-      setError("An unexpected error occurred.");
-    } finally {
-      setIsSubmitting(false);
+    setSuccessMsg(null);
+    
+    if (authMode === 'login') {
+        if (!inputName.trim() || !password.trim()) return;
+        setIsSubmitting(true);
+        try {
+            const userId = inputName.trim().toLowerCase().replace(/\s+/g, '_');
+            const success = await login(userId, password, isSignUp, isSignUp ? email : undefined);
+            if (!success) {
+                // Error is handled by context loadError
+            }
+        } catch (err: any) {
+            setError(err.message || "An unexpected error occurred.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    } else if (authMode === 'reset-request') {
+        if (!email.trim()) return;
+        setIsSubmitting(true);
+        const res = await requestPasswordReset(email);
+        setIsSubmitting(false);
+        if (res.success) {
+            setSuccessMsg(res.msg);
+            setAuthMode('reset-verify');
+        } else {
+            setError(res.msg);
+        }
+    } else if (authMode === 'reset-verify') {
+        if (!email.trim() || !resetCode.trim() || !password.trim()) return;
+        setIsSubmitting(true);
+        const res = await verifyResetCode(email, resetCode, password);
+        setIsSubmitting(false);
+        if (res.success) {
+            setSuccessMsg(res.msg);
+            setAuthMode('login');
+            setIsSignUp(false);
+        } else {
+            setError(res.msg);
+        }
     }
   };
 
-  // We can also use the loadError from context to display here if we want global error handling
-  // but for login form specific errors (like "wrong password"), passing it via state or ref is cleaner.
-  // Since context sets `loadError` on login fail, let's grab it.
   const { loadError: contextError } = useGamification();
 
   return (
@@ -51,52 +70,136 @@ const Login: React.FC = () => {
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-fun-pink/10 rounded-full blur-3xl" />
       <div className="absolute top-20 left-10 w-32 h-32 bg-fun-yellow/20 rounded-full blur-2xl animate-float" />
 
-      <div className="bg-white max-w-md w-full rounded-[2.5rem] shadow-2xl border-4 border-slate-100 p-10 relative z-10 transition-all duration-300">
+      <div className="bg-white max-w-md w-full rounded-[2.5rem] shadow-2xl border-4 border-slate-100 p-6 sm:p-10 relative z-10 transition-all duration-300">
         <div className="text-center mb-8">
           <div className="w-24 h-24 bg-gradient-to-tr from-fun-blue to-purple-500 rounded-[2rem] mx-auto mb-6 flex items-center justify-center text-white shadow-lg transform rotate-6 hover:rotate-0 transition-all duration-500">
-             <Rocket size={48} className="animate-pulse" />
+             {authMode === 'login' ? <Rocket size={48} className="animate-pulse" /> : <ShieldCheck size={48} />}
           </div>
           <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">
             Linguist<span className="text-fun-blue">AI</span>
           </h1>
           <p className="text-slate-500 font-bold">
-            {isSignUp ? "Create your hero account!" : "Welcome back, Hero!"}
+            {authMode === 'login' 
+                ? (isSignUp ? "Create your hero account!" : "Welcome back, Hero!")
+                : (authMode === 'reset-request' ? "Reset your password" : "Enter reset code")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-4">
-               User ID / Username
-            </label>
-            <div className="relative">
-               <User className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-               <input
-                 type="text"
-                 value={inputName}
-                 onChange={(e) => setInputName(e.target.value)}
-                 placeholder="e.g. SuperLearner"
-                 className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl py-4 pl-14 pr-6 text-xl font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors placeholder:text-slate-300"
-                 autoFocus
-               />
-            </div>
-          </div>
+          {authMode === 'login' && (
+            <>
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-4">
+                   User ID / Username
+                </label>
+                <div className="relative">
+                   <User className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                   <input
+                     type="text"
+                     value={inputName}
+                     onChange={(e) => setInputName(e.target.value)}
+                     placeholder="e.g. SuperLearner"
+                     className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl py-4 pl-14 pr-6 text-xl font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors placeholder:text-slate-300"
+                     autoFocus
+                   />
+                </div>
+              </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-4">
-               Password
-            </label>
-            <div className="relative">
-               <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-               <input
-                 type="password"
-                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
-                 placeholder="••••••••"
-                 className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl py-4 pl-14 pr-6 text-xl font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors placeholder:text-slate-300"
-               />
+              {isSignUp && (
+                <div className="space-y-2">
+                  <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-4">
+                     Email Address
+                  </label>
+                  <div className="relative">
+                     <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                     <input
+                       type="email"
+                       value={email}
+                       onChange={(e) => setEmail(e.target.value)}
+                       placeholder="hero@example.com"
+                       className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl py-4 pl-14 pr-6 text-xl font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors placeholder:text-slate-300"
+                       required
+                     />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-4">
+                   Password
+                </label>
+                <div className="relative">
+                   <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                   <input
+                     type="password"
+                     value={password}
+                     onChange={(e) => setPassword(e.target.value)}
+                     placeholder="••••••••"
+                     className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl py-4 pl-14 pr-6 text-xl font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors placeholder:text-slate-300"
+                   />
+                </div>
+              </div>
+            </>
+          )}
+
+          {authMode === 'reset-request' && (
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-4">
+                 Registered Email
+              </label>
+              <div className="relative">
+                 <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                 <input
+                   type="email"
+                   value={email}
+                   onChange={(e) => setEmail(e.target.value)}
+                   placeholder="hero@example.com"
+                   className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl py-4 pl-14 pr-6 text-xl font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors placeholder:text-slate-300"
+                   autoFocus
+                   required
+                 />
+              </div>
             </div>
-          </div>
+          )}
+
+          {authMode === 'reset-verify' && (
+            <>
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-4">
+                   Reset Code
+                </label>
+                <div className="relative">
+                   <Key className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                   <input
+                     type="text"
+                     value={resetCode}
+                     onChange={(e) => setResetCode(e.target.value)}
+                     placeholder="123456"
+                     className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl py-4 pl-14 pr-6 text-xl font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors placeholder:text-slate-300"
+                     autoFocus
+                     required
+                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase text-slate-400 tracking-widest pl-4">
+                   New Password
+                </label>
+                <div className="relative">
+                   <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                   <input
+                     type="password"
+                     value={password}
+                     onChange={(e) => setPassword(e.target.value)}
+                     placeholder="••••••••"
+                     className="w-full bg-slate-50 border-4 border-slate-100 rounded-3xl py-4 pl-14 pr-6 text-xl font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors placeholder:text-slate-300"
+                     required
+                   />
+                </div>
+              </div>
+            </>
+          )}
 
           {(error || contextError) && (
              <div className="bg-red-50 text-red-500 p-3 rounded-2xl text-center font-bold text-sm border-2 border-red-100">
@@ -104,26 +207,53 @@ const Login: React.FC = () => {
              </div>
           )}
 
+          {successMsg && (
+             <div className="bg-green-50 text-green-600 p-3 rounded-2xl text-center font-bold text-sm border-2 border-green-100">
+                {successMsg}
+             </div>
+          )}
+
           <Button 
             type="submit" 
             variant="primary" 
             className="w-full py-5 text-xl rounded-3xl shadow-xl hover:shadow-2xl mt-4" 
-            disabled={!inputName.trim() || !password.trim() || isSubmitting}
+            disabled={isSubmitting}
             isLoading={isSubmitting}
           >
-            {isSignUp ? "Create Account" : "Login"}
+            {authMode === 'login' ? (isSignUp ? "Create Account" : "Login") : (authMode === 'reset-request' ? "Send Reset Code" : "Change Password")}
           </Button>
+
+          {authMode !== 'login' && (
+            <button 
+              type="button" 
+              onClick={() => { setAuthMode('login'); setError(null); setSuccessMsg(null); }}
+              className="w-full flex items-center justify-center gap-2 text-slate-400 font-bold text-sm hover:text-slate-600 mt-2"
+            >
+              <ArrowLeft size={16} /> Back to Login
+            </button>
+          )}
         </form>
 
-        <div className="mt-6 text-center">
-            <button 
-              type="button"
-              onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
-              className="text-fun-blue font-bold text-sm hover:underline"
-            >
-              {isSignUp ? "Already have an account? Login" : "New here? Create an account"}
-            </button>
-        </div>
+        {authMode === 'login' && (
+            <div className="mt-6 flex flex-col gap-3 text-center">
+                <button 
+                  type="button"
+                  onClick={() => { setIsSignUp(!isSignUp); setError(null); setSuccessMsg(null); }}
+                  className="text-fun-blue font-bold text-sm hover:underline"
+                >
+                  {isSignUp ? "Already have an account? Login" : "New here? Create an account"}
+                </button>
+                {!isSignUp && (
+                    <button 
+                      type="button"
+                      onClick={() => { setAuthMode('reset-request'); setError(null); setSuccessMsg(null); }}
+                      className="text-slate-400 font-bold text-xs hover:text-fun-blue"
+                    >
+                      Forgot Password?
+                    </button>
+                )}
+            </div>
+        )}
 
         <div className="mt-8 pt-6 border-t-2 border-slate-50 flex justify-center gap-6 text-slate-400">
            <div className="flex flex-col items-center gap-2">

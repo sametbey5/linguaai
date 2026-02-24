@@ -4,42 +4,35 @@ import { UserStats, Badge, LeaderboardEntry, AppMode, Quest, TradeOffer, Gamific
 import { Star, Zap, Award, Gift, Sparkles, ArrowRightLeft, AlertTriangle } from 'lucide-react';
 import { db } from '../services/db';
 import { supabase } from '../services/supabaseClient';
+import { ALL_BADGES } from '../constants/badges';
 import { IAP, PurchasesPackage } from '../services/iap'; // Import IAP Service
 import { ADMIN_USERS } from '../constants';
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
 
-const INITIAL_TRADES: TradeOffer[] = [
-  {
-    id: 't1',
-    requiredBadgeId: 'badge_lvl1',
-    merchantName: 'Trader Tom',
-    expiresIn: '2 Days',
-    rewardBadge: {
-      id: 'badge_rare_star',
-      name: 'Crystal Star',
-      description: 'A rare trade item from the mystic bazaar.',
-      icon: '💎',
-      color: 'bg-indigo-500',
-      category: 'rare',
-      earnedAt: new Date().toISOString()
-    }
-  },
-  {
-    id: 't2',
-    requiredBadgeId: 'badge_vocab_novice',
-    merchantName: 'Library Owl',
-    rewardBadge: {
-      id: 'badge_rare_scroll',
-      name: 'Ancient Scroll',
-      description: 'Proof of trading knowledge for wisdom.',
-      icon: '📜',
-      color: 'bg-amber-600',
-      category: 'rare',
-      earnedAt: new Date().toISOString()
-    }
+const generateRandomTradeOffers = (count: number): TradeOffer[] => {
+  const offers: TradeOffer[] = [];
+  const merchants = ['Trader Tom', 'Library Owl', 'Mystic Maya', 'Gadget Guy', 'Forest Fairy', 'Space Scout', 'Chef Charlie'];
+  
+  for (let i = 0; i < count; i++) {
+    const rewardBadge = ALL_BADGES[Math.floor(Math.random() * ALL_BADGES.length)];
+    // For required badge, we can either pick another random one or use a specific one
+    // Let's pick another random one from the pool, but maybe a common one?
+    // For simplicity, let's just pick another random one.
+    const requiredBadge = ALL_BADGES[Math.floor(Math.random() * ALL_BADGES.length)];
+    
+    offers.push({
+      id: `t_gen_${i}`,
+      requiredBadgeId: requiredBadge.id,
+      merchantName: merchants[i % merchants.length],
+      expiresIn: `${Math.floor(Math.random() * 5) + 1} Days`,
+      rewardBadge: rewardBadge
+    });
   }
-];
+  return offers;
+};
+
+const INITIAL_TRADES: TradeOffer[] = generateRandomTradeOffers(10);
 
 export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Authentication State
@@ -62,6 +55,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [usageContext, setUsageContext] = useState<string>(defaultProfile.usageContext || '');
   const [cefrLevel, setCefrLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'>(defaultProfile.cefrLevel || 'A1');
   const [preferredLanguage, setPreferredLanguage] = useState<string>(defaultProfile.preferredLanguage || 'Turkish');
+  const [email, setEmail] = useState<string>(defaultProfile.email || '');
   
   // Local (non-persisted) state
   const [tradeOffers, setTradeOffers] = useState<TradeOffer[]>(INITIAL_TRADES);
@@ -70,6 +64,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   
   // UI State
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [appNotifications, setAppNotifications] = useState<AppNotification[]>([]);
 
   // --- IAP Initialization ---
   useEffect(() => {
@@ -94,7 +89,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // --- Auth & Data Loading Logic ---
 
-  const login = async (id: string, password?: string, isSignUp?: boolean): Promise<boolean> => {
+  const login = async (id: string, password?: string, isSignUp?: boolean, email?: string): Promise<boolean> => {
     setIsLoading(true);
     setLoadError(null);
 
@@ -106,11 +101,19 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         if (existingProfile) {
           throw new Error("User ID already exists. Please login.");
         }
+
+        if (email) {
+            const emailCheck = await db.getUserByEmail(email);
+            if (emailCheck) {
+                throw new Error("Email already registered. Please login.");
+            }
+        }
         
         // Create new user
         const newProfile: UserProfile = {
           ...db.getDefaults(),
-          password: password // Store password
+          password: password, // Store password
+          email: email
         };
         
         const success = await db.saveUser(id, newProfile);
@@ -127,6 +130,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         setUsageContext(newProfile.usageContext || '');
         setCefrLevel(newProfile.cefrLevel || 'A1');
         setPreferredLanguage(newProfile.preferredLanguage || 'Turkish');
+        setEmail(newProfile.email || '');
       } else {
         // LOGIN FLOW
         if (!existingProfile) {
@@ -149,6 +153,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         setUsageContext(existingProfile.usageContext || '');
         setCefrLevel(existingProfile.cefrLevel || 'A1');
         setPreferredLanguage(existingProfile.preferredLanguage || 'Turkish');
+        setEmail(existingProfile.email || '');
       }
 
       // Success
@@ -186,6 +191,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setUsageContext('');
     setCefrLevel('A1');
     setPreferredLanguage('Turkish');
+    setEmail('');
   };
 
   // Load User Data from DB when userId changes (e.g. on page refresh)
@@ -212,6 +218,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             setUsageContext(profile.usageContext || '');
             setCefrLevel(profile.cefrLevel || 'A1');
             setPreferredLanguage(profile.preferredLanguage || 'Turkish');
+            setEmail(profile.email || '');
             setIsInitialized(true);
           } else {
             // Edge case: ID in local storage but not in DB anymore
@@ -315,10 +322,40 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       setLeaderboard(marked);
     };
 
+    const fetchNotifications = async () => {
+      const data = await db.getGlobalNotifications();
+      setAppNotifications(data);
+    };
+
     fetchLeaderboard();
+    fetchNotifications();
     const interval = setInterval(fetchLeaderboard, 60000); // Refresh every minute
     return () => clearInterval(interval);
   }, [userId]);
+
+  // Real-time Subscription for Global Notifications
+  useEffect(() => {
+    const channel = supabase
+      .channel('global_notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+        },
+        async () => {
+          // Re-fetch all notifications on any change to keep it simple
+          const data = await db.getGlobalNotifications();
+          setAppNotifications(data);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Revised Save Logic with Password Persistence and SAFE Trade handling
   useEffect(() => {
@@ -328,6 +365,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
           // CRITICAL FIX: Fetch latest DB state before saving to prevent overwrites
           const currentDb = await db.getUser(userId);
           const passwordToSave = currentDb?.password;
+          const emailToSave = currentDb?.email || email;
           
           // Maintain isPremium from DB unless we are actively upgrading via web mock
           // But now we prefer DB to be source of truth for premium.
@@ -343,6 +381,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
               mode,
               trades: tradesToSave, // Use DB source of truth for trades
               password: passwordToSave,
+              email: emailToSave,
               isPremium: premiumStatus,
               focusArea,
               usageContext,
@@ -364,9 +403,6 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Force immediate save for critical onboarding data
       if (userId) {
          try {
-             // We need to construct the full profile to save it
-             // But saveUser expects a UserProfile. 
-             // We can fetch current, merge, and save.
              const currentProfile = await db.getUser(userId);
              if (currentProfile) {
                  await db.saveUser(userId, {
@@ -377,6 +413,72 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
          } catch (e) {
              console.error("Failed to save profile update", e);
          }
+      }
+  };
+
+  const requestPasswordReset = async (email: string): Promise<{ success: boolean; msg: string }> => {
+      try {
+          const user = await db.getUserByEmail(email);
+          if (!user) return { success: false, msg: 'Email not found.' };
+
+          const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+          
+          await db.saveUser(user.id, {
+              ...user.profile,
+              resetCode
+          });
+
+          // MOCK EMAIL SENDING
+          console.log(`[MOCK EMAIL] To: ${email}, Subject: Password Reset, Body: Your reset code is ${resetCode}`);
+          
+          return { success: true, msg: `Reset code sent to ${email}. (Check console for code in this demo)` };
+      } catch (e) {
+          return { success: false, msg: 'Failed to request reset.' };
+      }
+  };
+
+  const verifyResetCode = async (email: string, code: string, newPassword: string): Promise<{ success: boolean; msg: string }> => {
+      try {
+          const user = await db.getUserByEmail(email);
+          if (!user) return { success: false, msg: 'Email not found.' };
+
+          if (user.profile.resetCode !== code) {
+              return { success: false, msg: 'Invalid reset code.' };
+          }
+
+          await db.saveUser(user.id, {
+              ...user.profile,
+              password: newPassword,
+              resetCode: undefined // Clear code
+          });
+
+          return { success: true, msg: 'Password changed successfully! Please login.' };
+      } catch (e) {
+          return { success: false, msg: 'Failed to reset password.' };
+      }
+  };
+
+  const changeUsername = async (newUsername: string): Promise<{ success: boolean; msg: string }> => {
+      if (!userId) return { success: false, msg: 'Not logged in.' };
+      try {
+          const existing = await db.getUser(newUsername);
+          if (existing) return { success: false, msg: 'Username already taken.' };
+
+          const currentProfile = await db.getUser(userId);
+          if (!currentProfile) return { success: false, msg: 'User not found.' };
+
+          // Create new record
+          await db.saveUser(newUsername, currentProfile);
+          
+          // Delete old record (Supabase doesn't have a direct rename for ID)
+          await supabase.from('profiles').delete().eq('id', userId);
+
+          setUserId(newUsername);
+          localStorage.setItem('current_user_id', newUsername);
+          
+          return { success: true, msg: 'Username changed successfully!' };
+      } catch (e) {
+          return { success: false, msg: 'Failed to change username.' };
       }
   };
 
@@ -530,6 +632,12 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setNotification({ text: "Trade Successful!", type: 'trade' });
     setTimeout(() => setNotification(null), 2500);
     awardPoints(100, "Successful Trade");
+  };
+
+  const refreshTradeOffers = () => {
+    setTradeOffers(generateRandomTradeOffers(10));
+    setNotification({ text: "Trade Offers Refreshed!", type: 'trade' });
+    setTimeout(() => setNotification(null), 2000);
   };
 
   const grantBadge = (badge: Badge) => {
@@ -694,6 +802,26 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       setTimeout(() => setNotification(null), 2000);
   };
 
+  const addAppNotification = async (notif: Omit<AppNotification, 'id' | 'createdAt'>): Promise<{success: boolean, msg?: string}> => {
+    if (!isAdmin) return { success: false, msg: 'Not admin' };
+    const result = await db.addNotification(notif);
+    if (result.success) {
+      const data = await db.getGlobalNotifications();
+      setAppNotifications(data);
+    }
+    return result;
+  };
+
+  const deleteAppNotification = async (id: string): Promise<boolean> => {
+    if (!isAdmin) return false;
+    const success = await db.deleteNotification(id);
+    if (success) {
+      const data = await db.getGlobalNotifications();
+      setAppNotifications(data);
+    }
+    return success;
+  };
+
   if (userId && isLoading) {
       return (
           <div className="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center">
@@ -724,10 +852,11 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       userId, isAdmin, login, logout, isLoading, loadError,
       stats, badges, quests, tradeOffers, userTrades, awardPoints, completeQuest, updateRapport, claimDailyReward, tradeBadge, grantBadge, sendP2PTrade, respondToP2PTrade, 
       unlockPremium, restorePurchases, isPremium, setThemeColor, setAvatar,
-      notification, leaderboard, mode, setMode, 
+      notification, appNotifications, addAppNotification, deleteAppNotification, leaderboard, mode, setMode, 
       showLevelUp, closeLevelUp: () => setShowLevelUp(false),
       isContactOpen, setIsContactOpen, sendAdminMessage, replyToRequest,
-      focusArea, usageContext, cefrLevel, preferredLanguage, updateProfile
+      focusArea, usageContext, cefrLevel, preferredLanguage, email, updateProfile,
+      requestPasswordReset, verifyResetCode, changeUsername, refreshTradeOffers
     }}>
       {children}
       

@@ -29,23 +29,9 @@ export const createGeminiChat = (systemInstruction: string) => {
 export const generateVocab = async (topic: string, level: string, context?: string): Promise<any[]> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Return static mock data based on topic and context
-    const baseWords = [
-        {
-            word: "Example",
-            definition: "A representative form or pattern.",
-            exampleSentence: "This is an example sentence.",
-            pronunciation: "/ɪɡˈzæmpəl/"
-        },
-        {
-            word: "Mock",
-            definition: "Not authentic or real, but without the intention to deceive.",
-            exampleSentence: "We are using mock data.",
-            pronunciation: "/mɒk/"
-        }
-    ];
+    const activeContext = context || topic;
 
-    if (context === 'Business') {
+    if (activeContext === 'Business') {
         return [
             {
                 word: "Negotiation",
@@ -65,11 +51,22 @@ export const generateVocab = async (topic: string, level: string, context?: stri
                 exampleSentence: "The company's revenue increased by 20%.",
                 pronunciation: "/ˈrɛvənjuː/"
             },
-            ...baseWords
+            {
+                word: "Stakeholder",
+                definition: "A person with an interest or concern in something, especially a business.",
+                exampleSentence: "We need to identify all key stakeholders.",
+                pronunciation: "/ˈsteɪkˌhoʊldər/"
+            },
+            {
+                word: "Acquisition",
+                definition: "An asset or object bought or obtained, typically by a library or museum.",
+                exampleSentence: "The company's latest acquisition was a small tech startup.",
+                pronunciation: "/ˌæk.wɪˈzɪʃ.ən/"
+            }
         ];
     }
 
-    if (context === 'Travel') {
+    if (activeContext === 'Travel') {
         return [
             {
                 word: "Itinerary",
@@ -89,29 +86,122 @@ export const generateVocab = async (topic: string, level: string, context?: stri
                 exampleSentence: "Our departure time is 10 AM.",
                 pronunciation: "/dɪˈpɑːtʃə/"
             },
-            ...baseWords
+            {
+                word: "Destination",
+                definition: "The place to which someone or something is going or being sent.",
+                exampleSentence: "Paris is a popular tourist destination.",
+                pronunciation: "/ˌdes.tɪˈneɪ.ʃən/"
+            },
+            {
+                word: "Expedition",
+                definition: "A journey undertaken by a group of people with a particular purpose.",
+                exampleSentence: "The scientific expedition to the Antarctic was a success.",
+                pronunciation: "/ˌek.spəˈdɪʃ.ən/"
+            }
         ];
     }
 
+    if (activeContext === 'Academic') {
+        return [
+            {
+                word: "Hypothesis",
+                definition: "A proposed explanation made on the basis of limited evidence.",
+                exampleSentence: "The researchers are testing their hypothesis.",
+                pronunciation: "/haɪˈpɒθɪsɪs/"
+            },
+            {
+                word: "Curriculum",
+                definition: "The subjects comprising a course of study in a school or college.",
+                exampleSentence: "The school is revising its science curriculum.",
+                pronunciation: "/kəˈrɪkjʊləm/"
+            },
+            {
+                word: "Thesis",
+                definition: "A long essay or dissertation involving personal research.",
+                exampleSentence: "She is writing her doctoral thesis on climate change.",
+                pronunciation: "/ˈθiːsɪs/"
+            },
+            {
+                word: "Pedagogy",
+                definition: "The method and practice of teaching.",
+                exampleSentence: "The professor's pedagogy focuses on active learning.",
+                pronunciation: "/ˈped.ə.ɡɒdʒ.i/"
+            },
+            {
+                word: "Scholarly",
+                definition: "Involving or relating to serious academic study.",
+                exampleSentence: "The journal publishes scholarly articles on history.",
+                pronunciation: "/ˈskɒl.ə.li/"
+            }
+        ];
+    }
+
+    if (activeContext === 'Daily Life') {
+        return [
+            {
+                word: "Errand",
+                definition: "A short journey undertaken in order to deliver or collect something.",
+                exampleSentence: "I have a few errands to run this afternoon.",
+                pronunciation: "/ˈer.ənd/"
+            },
+            {
+                word: "Commute",
+                definition: "Travel some distance between one's home and place of work on a regular basis.",
+                exampleSentence: "My daily commute takes about 45 minutes.",
+                pronunciation: "/kəˈmjuːt/"
+            },
+            {
+                word: "Chore",
+                definition: "A routine task, especially a household one.",
+                exampleSentence: "Doing the laundry is my least favorite chore.",
+                pronunciation: "/tʃɔːr/"
+            },
+            {
+                word: "Leisure",
+                definition: "Use of free time for enjoyment.",
+                exampleSentence: "I enjoy reading during my leisure time.",
+                pronunciation: "/ˈleʒ.ər/"
+            },
+            {
+                word: "Grocery",
+                definition: "Items of food sold in a grocery store.",
+                exampleSentence: "I need to buy some groceries for dinner.",
+                pronunciation: "/ˈɡroʊ.sə.ri/"
+            }
+        ];
+    }
+
+    // Default / General words
     return [
-        ...baseWords,
         {
-            word: "Standalone",
-            definition: "Operating independently of other hardware or software.",
-            exampleSentence: "The app is now standalone.",
-            pronunciation: "/ˈstændəˌləʊn/"
+            word: "Resilient",
+            definition: "Able to withstand or recover quickly from difficult conditions.",
+            exampleSentence: "She is a resilient person who never gives up.",
+            pronunciation: "/rɪˈzɪl.i.ənt/"
         },
         {
-            word: "Simulation",
-            definition: "Imitation of a situation or process.",
-            exampleSentence: "This is a simulation of AI.",
-            pronunciation: "/ˌsɪmjʊˈleɪʃən/"
+            word: "Eloquent",
+            definition: "Fluent or persuasive in speaking or writing.",
+            exampleSentence: "The politician gave an eloquent speech.",
+            pronunciation: "/ˈel.ə.kwənt/"
         },
         {
-            word: "Offline",
-            definition: "Not connected to a computer or network.",
-            exampleSentence: "You can use this feature offline.",
-            pronunciation: "/ˈɒflaɪn/"
+            word: "Ambiguous",
+            definition: "Open to more than one interpretation; not having one obvious meaning.",
+            exampleSentence: "The instructions were ambiguous and confusing.",
+            pronunciation: "/æmˈbɪɡ.ju.əs/"
+        },
+        {
+            word: "Pragmatic",
+            definition: "Dealing with things sensibly and realistically.",
+            exampleSentence: "We need to take a pragmatic approach to the problem.",
+            pronunciation: "/præɡˈmæt.ɪk/"
+        },
+        {
+            word: "Ubiquitous",
+            definition: "Present, appearing, or found everywhere.",
+            exampleSentence: "Smartphones are ubiquitous in modern society.",
+            pronunciation: "/juːˈbɪk.wɪ.təs/"
         }
     ];
 };

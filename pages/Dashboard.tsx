@@ -1,21 +1,31 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Brain, Sword, Star, Flame, CheckCircle2, Rocket, PlayCircle, Sparkles, Wand2, RocketIcon, BarChart, ArrowRight, BookOpen, Clock, Target, Calendar, Award, Palette, X, Smile, Mic, Ear, Globe, Map } from 'lucide-react';
+import { Zap, Brain, Sword, Star, Flame, CheckCircle2, Rocket, PlayCircle, Sparkles, Wand2, RocketIcon, BarChart, ArrowRight, BookOpen, Clock, Target, Calendar, Award, Palette, X, Smile, Mic, Ear, Globe, Map, Settings } from 'lucide-react';
 import Button from '../components/Button';
 import { Badge, SkillTree } from '../types';
 import { useGamification } from '../context/GamificationContext';
 import { BadgeDisplayKids, BadgeDisplayPro } from '../components/BadgeDisplay';
 import ProgressTracker from '../components/ProgressTracker';
+import { ALL_BADGES } from '../constants/badges';
+import MysteryBox from '../components/MysteryBox';
 
-const THEME_COLORS = ['bg-fun-blue', 'bg-fun-green', 'bg-fun-yellow', 'bg-fun-orange', 'bg-fun-pink', 'bg-fun-purple'];
-const AVATAR_OPTIONS = ['😎', '🚀', '🦄', '🦖', '🤖', '🦊', '🐯', '🐼', '🐸', '🐙'];
+const THEME_COLORS = [
+  'bg-fun-blue', 'bg-fun-green', 'bg-fun-yellow', 'bg-fun-orange', 'bg-fun-pink', 'bg-fun-purple',
+  'bg-fun-red', 'bg-fun-teal', 'bg-fun-indigo', 'bg-fun-lime', 'bg-fun-amber',
+  'bg-slate-800', 'bg-emerald-500', 'bg-rose-500', 'bg-violet-600'
+];
+const AVATAR_OPTIONS = [
+  '😎', '🚀', '🦄', '🦖', '🤖', '🦊', '🐯', '🐼', '🐸', '🐙',
+  '🦁', '🦒', '🦓', '🦩', '🐲', '🧜‍♀️', '🧙‍♂️', '🦸‍♂️', '🛸', '🌈',
+  '🍎', '🍕', '🍦', '🎸', '⚽️', '🎨', '🎭', '🎮', '🎧', '📸'
+];
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { stats, quests, mode, awardPoints, badges, setThemeColor, setAvatar, grantBadge, userId } = useGamification();
-  const [boxState, setBoxState] = useState<'idle' | 'opening' | 'opened'>('idle');
-  const [boxContent, setBoxContent] = useState<string | null>(null);
+  const [showMysteryBox, setShowMysteryBox] = useState(false);
+  const [isBoxClaimed, setIsBoxClaimed] = useState(false);
   const [showStyleModal, setShowStyleModal] = useState(false);
   const [modalTab, setModalTab] = useState<'avatar' | 'color'>('avatar');
   
@@ -28,66 +38,56 @@ const Dashboard: React.FC = () => {
   const currentLevelPoints = stats.points % pointsPerLevel;
   const progressPercent = (currentLevelPoints / pointsPerLevel) * 100;
 
-  const openMysteryBox = () => {
-    if (boxState !== 'idle') return;
-    setBoxState('opening');
-    setTimeout(() => {
-      const rewards = ['+50 XP', '+100 XP', 'New Badge!', '+200 XP'];
-      const reward = rewards[Math.floor(Math.random() * rewards.length)];
-      setBoxContent(reward);
-      setBoxState('opened');
-      if (reward.includes('XP')) {
-        awardPoints(parseInt(reward.replace(/[^0-9]/g, '')), 'Mystery Box');
-      } else {
-        grantBadge({
-          id: 'mystery_box_badge',
-          name: 'Mystery Box Reward',
-          description: 'You found a hidden treasure!',
-          icon: '🎁',
-          color: 'bg-purple-500',
-          category: 'general',
-          earnedAt: new Date().toISOString()
-        });
-      }
-    }, 1500);
+  const handleRewardClaimed = (reward: { type: 'xp' | 'badge', value: any }) => {
+    if (reward.type === 'xp') {
+      awardPoints(reward.value, 'Mystery Box');
+    } else {
+      grantBadge({
+        ...reward.value,
+        earnedAt: new Date().toISOString()
+      });
+    }
+    setIsBoxClaimed(true);
   };
 
   const StylePickerModal = () => (
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white rounded-[3rem] p-8 max-w-md w-full shadow-2xl border-4 border-slate-100 relative">
-        <button onClick={() => setShowStyleModal(false)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full p-2">
-          <X size={24} />
+      <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-8 max-w-md w-full shadow-2xl border-4 border-slate-100 relative">
+        <button onClick={() => setShowStyleModal(false)} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full p-2">
+          <X size={20} />
         </button>
-        <h3 className="text-3xl font-black text-slate-800 mb-6 text-center">Customize Look</h3>
+        <h3 className="text-2xl sm:text-3xl font-black text-slate-800 mb-6 text-center">Customize Look</h3>
         
-        <div className="flex gap-4 mb-6 bg-slate-100 p-2 rounded-2xl">
+        <div className="flex gap-2 sm:gap-4 mb-6 bg-slate-100 p-2 rounded-2xl">
            <button onClick={() => setModalTab('avatar')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${modalTab === 'avatar' ? 'bg-white text-fun-blue shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>Avatar</button>
            <button onClick={() => setModalTab('color')} className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${modalTab === 'color' ? 'bg-white text-fun-blue shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>Color</button>
         </div>
 
-        {modalTab === 'avatar' ? (
-          <div className="grid grid-cols-5 gap-4">
-            {AVATAR_OPTIONS.map(emoji => (
-              <button 
-                key={emoji} 
-                onClick={() => { setAvatar(emoji); setShowStyleModal(false); }}
-                className={`text-4xl p-4 rounded-2xl border-4 transition-all hover:scale-110 active:scale-95 ${stats.avatar === emoji ? 'border-fun-blue bg-blue-50' : 'border-slate-100 hover:border-slate-200 bg-slate-50'}`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-4">
-            {THEME_COLORS.map(color => (
-              <button 
-                key={color} 
-                onClick={() => { setThemeColor(color); setShowStyleModal(false); }}
-                className={`h-24 rounded-2xl border-4 transition-all hover:scale-110 active:scale-95 ${color} ${stats.themeColor === color ? 'border-slate-800 shadow-lg scale-105' : 'border-white shadow-sm'}`}
-              />
-            ))}
-          </div>
-        )}
+        <div className="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto pr-2 scrollbar-hide">
+          {modalTab === 'avatar' ? (
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 sm:gap-4">
+              {AVATAR_OPTIONS.map(emoji => (
+                <button 
+                  key={emoji} 
+                  onClick={() => { setAvatar(emoji); setShowStyleModal(false); }}
+                  className={`text-3xl sm:text-4xl p-3 sm:p-4 rounded-2xl border-4 transition-all hover:scale-110 active:scale-95 ${stats.avatar === emoji ? 'border-fun-blue bg-blue-50' : 'border-slate-100 hover:border-slate-200 bg-slate-50'}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+              {THEME_COLORS.map(color => (
+                <button 
+                  key={color} 
+                  onClick={() => { setThemeColor(color); setShowStyleModal(false); }}
+                  className={`h-20 sm:h-24 rounded-2xl border-4 transition-all hover:scale-110 active:scale-95 ${color} ${stats.themeColor === color ? 'border-slate-800 shadow-lg scale-105' : 'border-white shadow-sm'}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -134,31 +134,38 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-10 animate-fade-in pb-20">
       {showStyleModal && <StylePickerModal />}
+      {showMysteryBox && (
+        <MysteryBox 
+          onClose={() => setShowMysteryBox(false)} 
+          onRewardClaimed={handleRewardClaimed}
+          availableBadges={ALL_BADGES}
+        />
+      )}
       
       {/* Header */}
-      <header className={`flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 shadow-sm bg-white rounded-[2.5rem] border-4 border-slate-100 relative overflow-hidden`}>
+      <header className={`flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 sm:p-8 shadow-sm bg-white rounded-[2rem] sm:rounded-[2.5rem] border-4 border-slate-100 relative overflow-hidden`}>
         <div className="absolute top-0 right-0 w-32 h-32 bg-fun-blue/5 rounded-full -mr-16 -mt-16 animate-pulse" />
-        <div className="flex items-center gap-6">
-           <div onClick={() => setShowStyleModal(true)} className={`w-20 h-20 ${stats.themeColor || 'bg-fun-blue'} rounded-[2rem] border-4 border-white shadow-xl flex items-center justify-center text-5xl transform rotate-3 animate-float cursor-pointer hover:scale-110 transition-transform relative group`}>
-             <div className="absolute -bottom-2 -right-2 bg-white p-1 rounded-full shadow-sm"><Palette size={14} className="text-slate-400" /></div>
+        <div className="flex items-center gap-4 sm:gap-6">
+           <div onClick={() => setShowStyleModal(true)} className={`w-16 h-16 sm:w-20 sm:h-20 ${stats.themeColor || 'bg-fun-blue'} rounded-2xl sm:rounded-[2rem] border-4 border-white shadow-xl flex items-center justify-center text-4xl sm:text-5xl transform rotate-3 animate-float cursor-pointer hover:scale-110 transition-transform relative group`}>
+             <div className="absolute -bottom-2 -right-2 bg-white p-1 rounded-full shadow-sm"><Palette size={12} className="text-slate-400" /></div>
              {stats.avatar || '😎'}
            </div>
            <div>
-              <h2 className="text-4xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                {stats.identityTitle || 'Explorer'} <Sparkles className="text-fun-yellow animate-pulse" />
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-800 tracking-tight flex items-center gap-2 sm:gap-3">
+                {stats.identityTitle || 'Explorer'} <Sparkles className="text-fun-yellow animate-pulse shrink-0" size={20} />
               </h2>
-              <p className="text-slate-500 font-bold">Level {stats.level} • <span className="text-fun-pink">{displayName}</span></p>
+              <p className="text-slate-500 font-bold text-sm sm:text-base">Level {stats.level} • <span className="text-fun-pink">{displayName}</span></p>
            </div>
         </div>
-        <div className="flex items-center space-x-4">
-            <div className="group flex flex-col items-center px-6 py-2 bg-orange-100 border-b-4 border-orange-200 rounded-3xl text-orange-600 font-black cursor-help">
-               <Flame size={24} className="fill-current animate-pulse group-hover:scale-125 transition-transform" />
-               <span className="text-2xl">{stats.streakDays}</span>
+        <div className="flex items-center justify-center sm:justify-end space-x-3 sm:space-x-4">
+            <div className="group flex flex-col items-center px-4 sm:px-6 py-2 bg-orange-100 border-b-4 border-orange-200 rounded-2xl sm:rounded-3xl text-orange-600 font-black cursor-help">
+               <Flame size={20} className="sm:w-6 sm:h-6 fill-current animate-pulse group-hover:scale-125 transition-transform" />
+               <span className="text-xl sm:text-2xl">{stats.streakDays}</span>
                <span className="text-[8px] uppercase">STREAK</span>
             </div>
-            <div className="group flex flex-col items-center px-6 py-2 bg-yellow-100 border-b-4 border-yellow-200 rounded-3xl text-yellow-600 font-black">
-               <Star size={24} className="fill-current animate-bounce-slow group-hover:rotate-180 transition-transform duration-500" />
-               <span className="text-2xl">{stats.points}</span>
+            <div className="group flex flex-col items-center px-4 sm:px-6 py-2 bg-yellow-100 border-b-4 border-yellow-200 rounded-2xl sm:rounded-3xl text-yellow-600 font-black">
+               <Star size={20} className="sm:w-6 sm:h-6 fill-current animate-bounce-slow group-hover:rotate-180 transition-transform duration-500" />
+               <span className="text-xl sm:text-2xl">{stats.points}</span>
                <span className="text-[8px] uppercase">TOTAL XP</span>
             </div>
         </div>
@@ -169,7 +176,7 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 space-y-8">
             
             {/* Daily Flow Section */}
-            <div className="bg-white p-8 rounded-[3rem] border-4 border-slate-100 shadow-xl relative overflow-hidden">
+            <div className="bg-white p-6 sm:p-8 rounded-[3rem] border-4 border-slate-100 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-2 bg-slate-100">
                     <div className="h-full bg-fun-green w-1/3" />
                 </div>
@@ -183,6 +190,14 @@ const Dashboard: React.FC = () => {
                         icon={<Zap />} 
                         color="bg-fun-yellow" 
                         onClick={() => navigate('/vocab')}
+                        completed={false}
+                    />
+                    <DailyFlowCard 
+                        title="Speak: Pronunciation" 
+                        time="3 min • Speaking" 
+                        icon={<Mic />} 
+                        color="bg-fun-green" 
+                        onClick={() => navigate('/pronunciation')}
                         completed={false}
                     />
                     <DailyFlowCard 
@@ -214,7 +229,7 @@ const Dashboard: React.FC = () => {
                         time="3 min • Grammar" 
                         icon={<Brain />} 
                         color="bg-fun-blue" 
-                        onClick={() => navigate('/grammar')}
+                        onClick={() => navigate('/game/scramble')}
                         completed={false}
                     />
                 </div>
@@ -245,35 +260,32 @@ const Dashboard: React.FC = () => {
             <ProgressTracker />
 
             {/* Daily Loot */}
-            <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-[3rem] text-center shadow-2xl relative overflow-hidden">
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 sm:p-8 rounded-[3rem] text-center shadow-2xl relative overflow-hidden">
                <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
                <h3 className="text-white font-black text-xl mb-6 flex items-center justify-center gap-2">
                   <Wand2 className="text-fun-blue" /> DAILY LOOT
                </h3>
                
                <div 
-                 onClick={openMysteryBox}
-                 className={`w-32 h-32 mx-auto mb-6 flex items-center justify-center text-6xl cursor-pointer transition-all ${boxState === 'opening' ? 'animate-wiggle scale-110' : 'hover:scale-110 active:scale-95 animate-float'}`}
+                 onClick={() => !isBoxClaimed && setShowMysteryBox(true)}
+                 className={`w-32 h-32 mx-auto mb-6 flex items-center justify-center text-6xl cursor-pointer transition-all ${!isBoxClaimed ? 'hover:scale-110 active:scale-95 animate-float' : 'opacity-50 grayscale'}`}
                >
-                  {boxState === 'idle' ? '🎁' : boxState === 'opening' ? '✨' : '⭐'}
+                  {isBoxClaimed ? '✨' : '🎁'}
                </div>
                
                <p className="text-white font-bold mb-4">
-                  {boxState === 'idle' ? 'What\'s inside today?' : boxState === 'opening' ? 'Opening...' : boxContent}
+                  {isBoxClaimed ? 'Come back tomorrow!' : 'Win XP or Rare Badges!'}
                </p>
                
-               {boxState === 'idle' && (
-                 <button onClick={openMysteryBox} className="bg-fun-blue text-white px-8 py-3 rounded-2xl font-black shadow-lg border-b-4 border-sky-700 hover:bg-sky-400">
+               {!isBoxClaimed && (
+                 <button onClick={() => setShowMysteryBox(true)} className="bg-fun-blue text-white px-8 py-3 rounded-2xl font-black shadow-lg border-b-4 border-sky-700 hover:bg-sky-400">
                     OPEN BOX
                  </button>
-               )}
-               {boxState === 'opened' && (
-                 <div className="text-fun-yellow font-black text-sm uppercase animate-fade-in">Come back tomorrow!</div>
                )}
             </div>
 
             {/* Badges Trophy Case */}
-            <div className="bg-white rounded-[2.5rem] border-4 border-slate-100 p-8 shadow-sm relative overflow-hidden">
+            <div className="bg-white rounded-[2.5rem] border-4 border-slate-100 p-6 sm:p-8 shadow-sm relative overflow-hidden">
                 <div className="flex items-center gap-3 mb-6">
                     <Award size={32} className="text-fun-yellow fill-current" />
                     <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Trophy Case</h3>
@@ -291,17 +303,23 @@ const Dashboard: React.FC = () => {
             {/* Customize Look Card */}
             <div 
               onClick={() => setShowStyleModal(true)}
-              className="bg-white p-6 rounded-[2.5rem] border-4 border-slate-100 shadow-xl cursor-pointer hover:scale-105 transition-transform group"
+              className="bg-white p-6 rounded-[2rem] sm:rounded-[2.5rem] border-4 border-slate-100 shadow-xl cursor-pointer hover:scale-105 transition-transform group"
             >
-               <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-black text-xl text-slate-800 flex items-center gap-2">
-                     <Smile className="text-fun-purple" /> MY STYLE
+               <div className="flex items-center justify-between gap-4 mb-4">
+                  <h3 className="font-black text-lg sm:text-xl text-slate-800 flex items-center gap-2">
+                     <Smile className="text-fun-purple shrink-0" /> MY STYLE
                   </h3>
-                  <div className={`w-12 h-12 rounded-2xl ${stats.themeColor || 'bg-fun-blue'} border-2 border-slate-200 shadow-sm flex items-center justify-center text-2xl`}>
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl ${stats.themeColor || 'bg-fun-blue'} border-2 border-slate-200 shadow-sm flex items-center justify-center text-xl sm:text-2xl shrink-0`}>
                      {stats.avatar || '😎'}
                   </div>
                </div>
-               <p className="text-slate-500 font-bold text-sm">Change color & avatar!</p>
+               <p className="text-slate-500 font-bold text-xs sm:text-sm">Change color & avatar!</p>
+               <button 
+                 onClick={(e) => { e.stopPropagation(); navigate('/settings'); }}
+                 className="mt-4 w-full py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-500 font-black text-[10px] sm:text-xs transition-colors flex items-center justify-center gap-2 border-2 border-slate-100"
+               >
+                 <Settings size={14} /> MANAGE ACCOUNT
+               </button>
             </div>
         </div>
       </div>

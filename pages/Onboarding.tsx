@@ -4,20 +4,7 @@ import { useGamification } from '../context/GamificationContext';
 import Button from '../components/Button';
 import { BookOpen, Mic, Ear, PenTool, Globe, Briefcase, Plane, GraduationCap, Coffee, Sparkles, Brain, Gamepad2, MessageCircle, Trophy, CheckCircle, XCircle, Languages } from 'lucide-react';
 
-const SUPPORTED_LANGUAGES = [
-  { code: 'tr', name: 'Turkish', flag: '🇹🇷' },
-  { code: 'es', name: 'Spanish', flag: '🇪🇸' },
-  { code: 'fr', name: 'French', flag: '🇫🇷' },
-  { code: 'de', name: 'German', flag: '🇩🇪' },
-  { code: 'it', name: 'Italian', flag: '🇮🇹' },
-  { code: 'pt', name: 'Portuguese', flag: '🇵🇹' },
-  { code: 'ru', name: 'Russian', flag: '🇷🇺' },
-  { code: 'zh', name: 'Chinese', flag: '🇨🇳' },
-  { code: 'ja', name: 'Japanese', flag: '🇯🇵' },
-  { code: 'ko', name: 'Korean', flag: '🇰🇷' },
-  { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
-  { code: 'hi', name: 'Hindi', flag: '🇮🇳' },
-];
+import { SUPPORTED_LANGUAGES } from '../constants';
 
 const PLACEMENT_TEST_QUESTIONS = [
   { id: 1, question: "I _____ from Spain.", options: ["is", "are", "am", "be"], answer: "am" },
@@ -179,15 +166,15 @@ const Onboarding: React.FC = () => {
   // --- STEP 0: LANGUAGE ---
   if (step === 0) {
       return (
-          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-              <div className="max-w-4xl w-full bg-white rounded-[3rem] shadow-2xl p-10 text-center animate-fade-in">
-                  <div className="w-20 h-20 bg-fun-blue rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                      <Languages size={40} className="text-white" />
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
+              <div className="max-w-4xl w-full bg-white rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl p-6 sm:p-10 text-center animate-fade-in">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-fun-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
+                      <Languages size={32} className="text-white sm:w-10 sm:h-10" />
                   </div>
-                  <h1 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Welcome to LinguistAI! 👋</h1>
-                  <p className="text-xl text-slate-500 font-medium mb-8">Choose your native language for side-by-side translations & support.</p>
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800 mb-2 sm:mb-4">Welcome to LinguistAI! 👋</h1>
+                  <p className="text-lg sm:text-xl text-slate-500 font-medium mb-6 sm:mb-8">Choose your native language for side-by-side translations & support.</p>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-h-[50vh] overflow-y-auto p-2">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-h-[50vh] overflow-y-auto p-1 sm:p-2">
                       {SUPPORTED_LANGUAGES.map(lang => (
                           <button
                               key={lang.code}
@@ -207,14 +194,14 @@ const Onboarding: React.FC = () => {
   // --- STEP 1: TEST INTRO ---
   if (step === 1) {
       return (
-          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-              <div className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl p-10 text-center animate-fade-in">
-                  <div className="w-20 h-20 bg-fun-purple rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                      <Brain size={40} className="text-white" />
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
+              <div className="max-w-md w-full bg-white rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl p-6 sm:p-10 text-center animate-fade-in">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-fun-purple rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
+                      <Brain size={32} className="text-white sm:w-10 sm:h-10" />
                   </div>
-                  <h2 className="text-3xl font-black text-slate-800 mb-4">Let's Check Your Level</h2>
-                  <p className="text-slate-500 font-medium mb-8">Take a quick 10-question test to find your perfect starting point. No pressure!</p>
-                  <Button onClick={startTest} variant="primary" className="w-full py-4 text-xl rounded-2xl shadow-xl">Start Quiz</Button>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-2 sm:mb-4">Let's Check Your Level</h2>
+                  <p className="text-slate-500 font-medium mb-6 sm:mb-8">Take a quick 10-question test to find your perfect starting point. No pressure!</p>
+                  <Button onClick={startTest} variant="primary" className="w-full py-3 sm:py-4 text-lg sm:text-xl rounded-2xl shadow-xl">Start Quiz</Button>
               </div>
           </div>
       );
@@ -226,27 +213,27 @@ const Onboarding: React.FC = () => {
       const progress = ((currentQuestionIndex) / PLACEMENT_TEST_QUESTIONS.length) * 100;
 
       return (
-          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-              <div className="max-w-2xl w-full bg-white rounded-[3rem] shadow-2xl p-10 animate-fade-in">
-                  <div className="flex justify-between items-center mb-6">
-                      <span className="font-bold text-slate-400">Question {currentQuestionIndex + 1}/{PLACEMENT_TEST_QUESTIONS.length}</span>
-                      <span className="font-black text-fun-purple">Level Check</span>
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
+              <div className="max-w-2xl w-full bg-white rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl p-6 sm:p-10 animate-fade-in">
+                  <div className="flex justify-between items-center mb-4 sm:mb-6">
+                      <span className="font-bold text-slate-400 text-sm sm:text-base">Question {currentQuestionIndex + 1}/{PLACEMENT_TEST_QUESTIONS.length}</span>
+                      <span className="font-black text-fun-purple text-sm sm:text-base">Level Check</span>
                   </div>
                   
-                  <div className="w-full bg-slate-100 h-3 rounded-full mb-8 overflow-hidden">
+                  <div className="w-full bg-slate-100 h-2 sm:h-3 rounded-full mb-6 sm:mb-8 overflow-hidden">
                       <div className="bg-fun-purple h-full transition-all duration-300" style={{ width: `${progress}%` }} />
                   </div>
-
-                  <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-8 leading-tight">
+ 
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-800 mb-6 sm:mb-8 leading-tight">
                       {question.question}
                   </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                       {question.options.map((opt, idx) => (
                           <button
                               key={idx}
                               onClick={() => handleTestAnswer(opt)}
-                              className="p-5 rounded-2xl border-4 border-slate-100 hover:border-fun-purple hover:bg-purple-50 text-left font-bold text-xl text-slate-700 transition-all"
+                              className="p-4 sm:p-5 rounded-xl sm:rounded-2xl border-4 border-slate-100 hover:border-fun-purple hover:bg-purple-50 text-left font-bold text-lg sm:text-xl text-slate-700 transition-all"
                           >
                               {opt}
                           </button>
@@ -260,20 +247,20 @@ const Onboarding: React.FC = () => {
   // --- STEP 3: RESULT ---
   if (step === 3) {
       return (
-          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-              <div className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl p-10 text-center animate-fade-in">
-                  <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg animate-bounce">
-                      <Sparkles size={48} className="text-white" />
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
+              <div className="max-w-md w-full bg-white rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl p-6 sm:p-10 text-center animate-fade-in">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg animate-bounce">
+                      <Sparkles size={40} className="text-white sm:w-12 sm:h-12" />
                   </div>
-                  <h2 className="text-3xl font-black text-slate-800 mb-2">Great Job!</h2>
-                  <p className="text-slate-500 font-medium mb-6">We've analyzed your results.</p>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-800 mb-2">Great Job!</h2>
+                  <p className="text-slate-500 font-medium mb-4 sm:mb-6">We've analyzed your results.</p>
                   
-                  <div className="bg-slate-50 p-6 rounded-3xl border-4 border-slate-100 mb-8">
-                      <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Your Level</div>
-                      <div className="text-5xl font-black text-fun-blue">{determinedLevel}</div>
+                  <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-4 border-slate-100 mb-6 sm:mb-8">
+                      <div className="text-[10px] sm:text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Your Level</div>
+                      <div className="text-4xl sm:text-5xl font-black text-fun-blue">{determinedLevel}</div>
                   </div>
-
-                  <Button onClick={() => setStep(4)} variant="primary" className="w-full py-4 text-xl rounded-2xl shadow-xl">Continue Setup</Button>
+ 
+                  <Button onClick={() => setStep(4)} variant="primary" className="w-full py-3 sm:py-4 text-lg sm:text-xl rounded-2xl shadow-xl">Continue Setup</Button>
               </div>
           </div>
       );
@@ -281,8 +268,8 @@ const Onboarding: React.FC = () => {
 
   // --- STEPS 4, 5, 6: PREFERENCES ---
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full bg-white rounded-[3rem] shadow-2xl border-4 border-slate-100 p-8 md:p-12 relative overflow-hidden animate-fade-in">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
+      <div className="max-w-2xl w-full bg-white rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl border-4 border-slate-100 p-6 sm:p-8 md:p-12 relative overflow-hidden animate-fade-in">
         {/* Progress Bar for Setup Phase */}
         <div className="absolute top-0 left-0 w-full h-2 bg-slate-100">
           <div 
