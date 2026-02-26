@@ -56,12 +56,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Mobile Header */}
       <div className={`md:hidden p-4 flex items-center justify-between sticky top-0 z-30 shadow-sm ${isKids ? 'bg-white border-b-4 border-slate-100' : 'bg-white border-b border-slate-200'}`}>
         <div className="flex items-center gap-2">
-            <div className={`${isKids ? 'bg-fun-yellow p-1.5 rounded-lg border-b-2 border-yellow-400 rotate-3' : 'bg-blue-600 p-1.5 rounded'} text-white transform shadow-sm`}>
-                {isKids ? <Gamepad2 size={20} /> : <Briefcase size={20} />}
-            </div>
-            <h1 className={`${isKids ? 'text-xl font-black' : 'text-lg font-semibold'} text-slate-800 tracking-tight`}>
-                Linguist<span className={isKids ? 'text-fun-blue' : 'text-blue-600'}>AI</span>
-            </h1>
+            <img 
+              src="https://i.ibb.co/23HGg63k/lingavo.png" 
+              alt="Lingavo Logo" 
+              className="h-8 w-auto object-contain"
+              referrerPolicy="no-referrer"
+            />
         </div>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

@@ -417,34 +417,68 @@ export const db = {
 
   /**
    * Global Notifications System
-   * Uses the notifications table
+   * 
+   * IMPORTANT: This requires a "notifications" table in Supabase.
+   * Run this SQL in your Supabase SQL Editor:
+   * 
+   * CREATE TABLE notifications (
+   *   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+   *   created_at TIMESTAMPTZ DEFAULT now(),
+   *   title TEXT NOT NULL,
+   *   message TEXT NOT NULL,
+   *   type TEXT NOT NULL DEFAULT 'info',
+   *   is_global BOOLEAN DEFAULT true
+   * );
+   * 
+   * -- Enable Realtime for this table
+   * ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+   * 
+   * -- FIX RLS POLICIES (Run these if you get "violates row-level security policy")
+   * ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+   * 
+   * CREATE POLICY "Allow public read" ON notifications FOR SELECT USING (true);
+   * CREATE POLICY "Allow public insert" ON notifications FOR INSERT WITH CHECK (true);
+   * CREATE POLICY "Allow public delete" ON notifications FOR DELETE USING (true);
    */
   async getGlobalNotifications(): Promise<any[]> {
     try {
-      let { data, error } = await supabase
+      // Primary attempt: notifications table
+      const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error && error.code === '42703') { // column does not exist (e.g. created_at)
-        const retry = await supabase
-          .from('notifications')
-          .select('*');
-        data = retry.data;
-        error = retry.error;
-      }
-
       if (error) {
-        if (error.code === '42P01') return []; // table does not exist
+        // If table doesn't exist or RLS prevents access, fall back to profiles
+        if (error.code === '42P01' || error.code === '42501') {
+          if (error.code === '42501') {
+            console.warn("Supabase: RLS policy prevents access to 'notifications'. Falling back to profiles. Please run the SQL policies provided in db.ts.");
+          } else {
+            console.warn("Supabase: 'notifications' table not found. Falling back to profiles.");
+          }
+          
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('data')
+            .eq('id', '__global_notifications__')
+            .single();
+          
+          if (profileError) {
+            if (profileError.code === 'PGRST116') return [];
+            throw profileError;
+          }
+          return profileData?.data?.notifications || [];
+        }
         throw error;
       }
+
       return data?.map(n => ({
         id: n.id,
         title: n.title,
         message: n.message,
         type: n.type,
         isGlobal: n.is_global ?? true,
-        createdAt: n.created_at || n.createdAt || new Date().toISOString()
+        createdAt: n.created_at || new Date().toISOString()
       })) || [];
     } catch (e) {
       console.error("Failed to fetch notifications", e);
@@ -455,7 +489,9 @@ export const db = {
   async addNotification(notification: any): Promise<{success: boolean, msg?: string}> {
     try {
       const now = new Date().toISOString();
-      let { error } = await supabase
+      
+      // Primary attempt: notifications table
+      const { error } = await supabase
         .from('notifications')
         .insert({
           title: notification.title,
@@ -465,32 +501,56 @@ export const db = {
           created_at: now
         });
       
-      if (error && error.code === '42703') { // column does not exist
-        const { error: retryError } = await supabase
-          .from('notifications')
-          .insert({
-            title: notification.title,
-            message: notification.message,
-            type: notification.type
-          });
-        if (retryError) throw retryError;
-        return { success: true };
-      } else if (error && error.code === '23502') { // not null violation (e.g. id)
-        const { error: retryError } = await supabase
-          .from('notifications')
-          .insert({
-            id: crypto.randomUUID(),
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            is_global: notification.isGlobal ?? true,
-            created_at: now
-          });
-        if (retryError) throw retryError;
-        return { success: true };
+      if (error) {
+        // If table doesn't exist or RLS prevents access, fall back to profiles
+        if (error.code === '42P01' || error.code === '42501') {
+          if (error.code === '42501') {
+            console.warn("Supabase: RLS policy prevents insert to 'notifications'. Falling back to profiles.");
+          } else {
+            console.warn("Supabase: 'notifications' table not found. Falling back to profiles.");
+          }
+          
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('data')
+            .eq('id', '__global_notifications__')
+            .single();
+          
+          const existing = profileData?.data?.notifications || [];
+          const newNotif = {
+            ...notification,
+            id: `notif_${Date.now()}`,
+            createdAt: now
+          };
+          
+          const { error: upsertError } = await supabase
+            .from('profiles')
+            .upsert({ 
+              id: '__global_notifications__', 
+              data: { notifications: [newNotif, ...existing] } 
+            });
+          
+          if (upsertError) throw upsertError;
+          return { success: true };
+        }
+        
+        // Handle other common schema mismatches gracefully
+        if (error.code === '42703' || error.code === '23502') {
+          console.warn("Supabase: Schema mismatch in 'notifications' table. Retrying with minimal payload.", error.message);
+          const { error: retryError } = await supabase
+            .from('notifications')
+            .insert({
+              title: notification.title,
+              message: notification.message,
+              type: notification.type
+            });
+          if (retryError) throw retryError;
+          return { success: true };
+        }
+        
+        throw error;
       }
 
-      if (error) throw error;
       return { success: true };
     } catch (e: any) {
       console.error("Failed to add notification", e);
@@ -505,7 +565,30 @@ export const db = {
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        if (error.code === '42P01' || error.code === '42501') { // fallback for delete
+          if (error.code === '42501') {
+            console.warn("Supabase: RLS policy prevents delete from 'notifications'. Falling back to profiles.");
+          }
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('data')
+            .eq('id', '__global_notifications__')
+            .single();
+          
+          const existing = profileData?.data?.notifications || [];
+          const updated = existing.filter((n: any) => n.id !== id);
+          
+          await supabase
+            .from('profiles')
+            .upsert({ 
+              id: '__global_notifications__', 
+              data: { notifications: updated } 
+            });
+          return true;
+        }
+        throw error;
+      }
       return true;
     } catch (e) {
       console.error("Failed to delete notification", e);

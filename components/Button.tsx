@@ -23,7 +23,7 @@ const Button: React.FC<ButtonProps> = ({
 
   const variants = {
     // Fun Variants
-    primary: `${funBase} bg-fun-blue border-sky-600 text-white hover:bg-sky-400 focus:ring-sky-300`,
+    primary: `${funBase} bg-fun-blue border-blue-700 text-white hover:bg-blue-500 focus:ring-blue-300`,
     secondary: `${funBase} bg-white border-slate-200 text-slate-700 hover:bg-slate-50 focus:ring-slate-200`,
     outline: `${funBase} bg-white border-2 border-fun-blue text-fun-blue hover:bg-blue-50 border-b-4 border-fun-blue`,
     ghost: `${funBase} bg-transparent border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-b-0`,

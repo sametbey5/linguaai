@@ -26,6 +26,7 @@ import Onboarding from './pages/Onboarding';
 import StoryMode from './pages/StoryMode';
 import PronunciationPractice from './pages/PronunciationPractice';
 import Notifications from './pages/Notifications';
+import RaceMode from './pages/RaceMode';
 import { GamificationProvider, useGamification } from './context/GamificationContext';
 
 // Auth Wrapper Component
@@ -78,6 +79,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/game/boss" element={<AuthWrapper><BossBattle /></AuthWrapper>} />
       <Route path="/game/racer" element={<AuthWrapper><SpeedRacer /></AuthWrapper>} />
       <Route path="/game/whack" element={<AuthWrapper><WordWhack /></AuthWrapper>} />
+      <Route path="/race" element={<AuthWrapper><RaceMode /></AuthWrapper>} />
     </Routes>
   );
 };

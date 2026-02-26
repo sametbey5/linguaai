@@ -258,7 +258,7 @@ const QuestAdventure: React.FC = () => {
                 placeholder="What will you do next?"
                 className="flex-1 p-3 sm:p-5 rounded-2xl sm:rounded-3xl border-4 border-slate-100 focus:border-fun-blue outline-none font-bold text-lg sm:text-xl"
               />
-              <button disabled={health <= 0 || isLoading} className="bg-fun-blue text-white w-16 sm:w-20 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-xl border-b-4 sm:border-b-8 border-sky-700 active:translate-y-1 active:border-b-0 transition-all">
+              <button disabled={health <= 0 || isLoading} className="bg-fun-blue text-white w-16 sm:w-20 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-xl border-b-4 sm:border-b-8 border-blue-800 active:translate-y-1 active:border-b-0 transition-all">
                  <Send size={24} className="sm:w-8 sm:h-8" />
               </button>
            </div>

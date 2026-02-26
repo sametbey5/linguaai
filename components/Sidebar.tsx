@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, MessageCircle, BookOpen, PenTool, Trophy, Gamepad2, Briefcase, Zap, Sword, Brain, MonitorPlay, BarChart3, Settings, Mic, Crown, Store, ArrowRightLeft, LogOut, User, ShieldCheck, HelpCircle, Globe, ChevronDown, GraduationCap, Volume2, Bell } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, BookOpen, PenTool, Trophy, Gamepad2, Briefcase, Zap, Sword, Brain, MonitorPlay, BarChart3, Settings, Mic, Crown, Store, ArrowRightLeft, LogOut, User, ShieldCheck, HelpCircle, Globe, ChevronDown, GraduationCap, Volume2, Bell, Flag } from 'lucide-react';
 import { useGamification } from '../context/GamificationContext';
 import { SUPPORTED_LANGUAGES } from '../constants';
 
@@ -17,6 +17,7 @@ const Sidebar: React.FC = () => {
     { name: isKids ? 'Talk to Friend' : 'Live Conversation', path: '/talk', icon: <Mic size={isKids ? 24 : 20} />, color: 'text-fun-green' }, 
     { name: isKids ? 'Speak Clear' : 'Pronunciation', path: '/pronunciation', icon: <Volume2 size={isKids ? 24 : 20} />, color: 'text-fun-blue' },
     { name: isKids ? 'Word Rush' : 'Vocabulary', path: '/vocab', icon: isKids ? <Zap size={24} /> : <BookOpen size={20} />, color: 'text-fun-yellow' },
+    { name: isKids ? 'Live Race' : 'Competitive Race', path: '/race', icon: <Flag size={isKids ? 24 : 20} />, color: 'text-red-500' },
     { name: isKids ? 'Grammar Coach' : 'AI Coach', path: '/grammar', icon: <GraduationCap size={isKids ? 24 : 20} />, color: 'text-fun-purple' },
     { name: isKids ? 'Scramble' : 'Grammar Lessons', path: isKids ? '/game/scramble' : '/grammar-lessons', icon: isKids ? <Brain size={24} /> : <PenTool size={20} />, color: 'text-fun-purple' },
     { name: isKids ? 'TV Time' : 'Video Content', path: '/videos', icon: <MonitorPlay size={isKids ? 24 : 20} />, color: 'text-fun-orange' },
@@ -34,12 +35,13 @@ const Sidebar: React.FC = () => {
     return (
       <div className="w-64 bg-slate-900 hidden md:flex flex-col h-screen fixed left-0 top-0 z-10 border-r border-slate-800 text-slate-300">
         <div className="p-6 flex items-center space-x-3 border-b border-slate-800">
-          <div className="bg-blue-600 p-2 rounded-lg text-white">
-            <Briefcase size={20} />
-          </div>
-          <h1 className="text-xl font-semibold text-white tracking-tight">
-            Linguist<span className="text-blue-500">AI</span> <span className="text-xs font-normal text-slate-500 ml-1">Pro</span>
-          </h1>
+          <img 
+            src="https://i.ibb.co/23HGg63k/lingavo.png" 
+            alt="Lingavo Logo" 
+            className="h-8 w-auto object-contain"
+            referrerPolicy="no-referrer"
+          />
+          <span className="text-xs font-normal text-slate-500 ml-auto">Pro</span>
         </div>
         
         <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
@@ -173,13 +175,13 @@ const Sidebar: React.FC = () => {
   // Original Fun Sidebar for Kids
   return (
     <div className={`w-72 bg-white hidden md:flex flex-col h-screen fixed left-0 top-0 z-10 border-r-4 border-slate-100 shadow-lg rounded-r-[3rem]`}>
-      <div className="p-8 flex items-center space-x-3">
-        <div className={`bg-fun-blue p-3 rounded-2xl transform rotate-3 shadow-md border-b-4 border-sky-600 text-white`}>
-          <Gamepad2 size={32} />
-        </div>
-        <h1 className={`text-2xl font-black text-slate-800`}>
-          Linguist<span className={'text-fun-blue'}>AI</span>
-        </h1>
+      <div className="p-8 flex items-center justify-center">
+        <img 
+          src="https://i.ibb.co/23HGg63k/lingavo.png" 
+          alt="Lingavo Logo" 
+          className="h-12 w-auto object-contain"
+          referrerPolicy="no-referrer"
+        />
       </div>
       
       <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-4">

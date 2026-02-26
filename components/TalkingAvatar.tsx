@@ -128,8 +128,8 @@ const TalkingAvatar: React.FC<TalkingAvatarProps> = ({ character, volume }) => {
          {/* Eyes */}
          <ellipse cx="85" cy="90" rx="8" ry="10" fill="white" />
          <ellipse cx="115" cy="90" rx="8" ry="10" fill="white" />
-         <circle cx="85" cy="90" r="4" fill="#3b82f6" />
-         <circle cx="115" cy="90" r="4" fill="#3b82f6" />
+         <circle cx="85" cy="90" r="4" fill="#0d75eb" />
+         <circle cx="115" cy="90" r="4" fill="#0d75eb" />
          <circle cx="85" cy="90" r="1.5" fill="black" />
          <circle cx="115" cy="90" r="1.5" fill="black" />
          

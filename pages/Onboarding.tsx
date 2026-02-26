@@ -171,7 +171,7 @@ const Onboarding: React.FC = () => {
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-fun-blue rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
                       <Languages size={32} className="text-white sm:w-10 sm:h-10" />
                   </div>
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800 mb-2 sm:mb-4">Welcome to LinguistAI! 👋</h1>
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-800 mb-2 sm:mb-4">Welcome to Lingavo! 👋</h1>
                   <p className="text-lg sm:text-xl text-slate-500 font-medium mb-6 sm:mb-8">Choose your native language for side-by-side translations & support.</p>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-h-[50vh] overflow-y-auto p-1 sm:p-2">

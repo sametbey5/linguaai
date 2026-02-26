@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Brain, Sword, Star, Flame, CheckCircle2, Rocket, PlayCircle, Sparkles, Wand2, RocketIcon, BarChart, ArrowRight, BookOpen, Clock, Target, Calendar, Award, Palette, X, Smile, Mic, Ear, Globe, Map, Settings } from 'lucide-react';
+import { Zap, Brain, Sword, Star, Flame, CheckCircle2, Rocket, PlayCircle, Sparkles, Wand2, RocketIcon, BarChart, ArrowRight, BookOpen, Clock, Target, Calendar, Award, Palette, X, Smile, Mic, Ear, Globe, Map, Settings, Flag } from 'lucide-react';
 import Button from '../components/Button';
 import { Badge, SkillTree } from '../types';
 import { useGamification } from '../context/GamificationContext';
@@ -193,6 +193,14 @@ const Dashboard: React.FC = () => {
                         completed={false}
                     />
                     <DailyFlowCard 
+                        title="Live Race: Compete!" 
+                        time="3 min • Multiplayer" 
+                        icon={<Flag />} 
+                        color="bg-red-500" 
+                        onClick={() => navigate('/race')}
+                        completed={false}
+                    />
+                    <DailyFlowCard 
                         title="Speak: Pronunciation" 
                         time="3 min • Speaking" 
                         icon={<Mic />} 
@@ -278,7 +286,7 @@ const Dashboard: React.FC = () => {
                </p>
                
                {!isBoxClaimed && (
-                 <button onClick={() => setShowMysteryBox(true)} className="bg-fun-blue text-white px-8 py-3 rounded-2xl font-black shadow-lg border-b-4 border-sky-700 hover:bg-sky-400">
+                 <button onClick={() => setShowMysteryBox(true)} className="bg-fun-blue text-white px-8 py-3 rounded-2xl font-black shadow-lg border-b-4 border-blue-800 hover:bg-blue-500">
                     OPEN BOX
                  </button>
                )}

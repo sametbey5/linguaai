@@ -72,12 +72,14 @@ const Login: React.FC = () => {
 
       <div className="bg-white max-w-md w-full rounded-[2.5rem] shadow-2xl border-4 border-slate-100 p-6 sm:p-10 relative z-10 transition-all duration-300">
         <div className="text-center mb-8">
-          <div className="w-24 h-24 bg-gradient-to-tr from-fun-blue to-purple-500 rounded-[2rem] mx-auto mb-6 flex items-center justify-center text-white shadow-lg transform rotate-6 hover:rotate-0 transition-all duration-500">
-             {authMode === 'login' ? <Rocket size={48} className="animate-pulse" /> : <ShieldCheck size={48} />}
+          <div className="mb-6 flex items-center justify-center">
+             <img 
+               src="https://i.ibb.co/23HGg63k/lingavo.png" 
+               alt="Lingavo Logo" 
+               className="h-20 w-auto object-contain"
+               referrerPolicy="no-referrer"
+             />
           </div>
-          <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">
-            Linguist<span className="text-fun-blue">AI</span>
-          </h1>
           <p className="text-slate-500 font-bold">
             {authMode === 'login' 
                 ? (isSignUp ? "Create your hero account!" : "Welcome back, Hero!")

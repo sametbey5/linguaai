@@ -1,5 +1,5 @@
 {
-  "name": "LinguistAI",
-  "description": "A professional English learning platform. Features roleplay scenarios, vocabulary building with pronunciation, and grammar coaching.",
+  "name": "Lingavo - Learn Languages",
+  "description": "A professional English learning platform. Features real-time competitive races, roleplay scenarios, vocabulary building with pronunciation, and grammar coaching.",
   "requestFramePermissions": ["microphone"]
 }

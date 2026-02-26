@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LinguistAI - Learn English</title>
+    <title>Lingavo - Learn Languages</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,9 +16,22 @@
               adult: ['Inter', 'sans-serif'],
             },
             colors: {
-              primary: { 50: '#e0f7fa', 100: '#b2ebf2', 400: '#26c6da', 500: '#00bcd4', 600: '#00acc1', 700: '#0097a7' },
-              fun: { blue: '#4FC3F7', green: '#AED581', yellow: '#FFF176', orange: '#FFB74D', pink: '#F06292', purple: '#BA68C8', red: '#FF5252', teal: '#4DB6AC', indigo: '#7986CB', lime: '#DCE775', amber: '#FFD54F' },
-              pro: { slate: '#1e293b', blue: '#2563eb', indigo: '#4f46e5', gray: '#f8fafc' }
+              primary: { 50: '#eff6ff', 100: '#dbeafe', 400: '#60a5fa', 500: '#0d75eb', 600: '#0b61c4', 700: '#094da3' },
+              fun: { blue: '#0d75eb', green: '#AED581', yellow: '#FFF176', orange: '#FFB74D', pink: '#F06292', purple: '#BA68C8', red: '#FF5252', teal: '#4DB6AC', indigo: '#7986CB', lime: '#DCE775', amber: '#FFD54F' },
+              pro: { slate: '#1e293b', blue: '#0d75eb', indigo: '#4f46e5', gray: '#f8fafc' },
+              blue: {
+                50: '#eff6ff',
+                100: '#dbeafe',
+                200: '#bfdbfe',
+                300: '#93c5fd',
+                400: '#60a5fa',
+                500: '#3b82f6',
+                600: '#0d75eb',
+                700: '#0b61c4',
+                800: '#094da3',
+                900: '#073a7a',
+                950: '#052752',
+              }
             },
             borderRadius: { 'xl': '1rem', '2xl': '1.5rem', '3xl': '2rem' },
             animation: {
@@ -56,7 +69,7 @@
       .card-flip:hover .card-inner, .card-flipped .card-inner { transform: rotateY(180deg); }
       @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
       .animate-pop { animation: pop 0.3s ease-out; }
-      .rainbow-text { background-image: linear-gradient(to left, #F06292, #BA68C8, #4FC3F7, #AED581, #FFF176, #FFB74D); -webkit-background-clip: text; color: transparent; background-size: 200% auto; animation: rainbow 3s linear infinite; }
+      .rainbow-text { background-image: linear-gradient(to left, #F06292, #BA68C8, #0d75eb, #AED581, #FFF176, #FFB74D); -webkit-background-clip: text; color: transparent; background-size: 200% auto; animation: rainbow 3s linear infinite; }
       @keyframes rainbow { to { background-position: 200% center; } }
     </style>
 </head>

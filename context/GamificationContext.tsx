@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { UserStats, Badge, LeaderboardEntry, AppMode, Quest, TradeOffer, GamificationContextType, UserProfile, UserTrade, ContactRequest } from '../types';
+import { UserStats, Badge, LeaderboardEntry, AppMode, Quest, TradeOffer, GamificationContextType, UserProfile, UserTrade, ContactRequest, AppNotification } from '../types';
 import { Star, Zap, Award, Gift, Sparkles, ArrowRightLeft, AlertTriangle } from 'lucide-react';
 import { db } from '../services/db';
 import { supabase } from '../services/supabaseClient';
@@ -51,6 +51,11 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userTrades, setUserTrades] = useState<UserTrade[]>([]);
   const [isPremium, setIsPremium] = useState<boolean>(false);
+  const [premiumDetails, setPremiumDetails] = useState<{
+    expirationDate?: string;
+    willRenew?: boolean;
+    productIdentifier?: string;
+  } | null>(null);
   const [focusArea, setFocusArea] = useState<string[]>(defaultProfile.focusArea || []);
   const [usageContext, setUsageContext] = useState<string>(defaultProfile.usageContext || '');
   const [cefrLevel, setCefrLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'>(defaultProfile.cefrLevel || 'A1');
@@ -73,14 +78,19 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         IAP.initialize(userId).then(() => {
             // Check if user has active subscription from RevenueCat
             IAP.checkSubscriptionStatus().then(isActive => {
-                if (isActive && !isPremium) {
+                if (isActive) {
                     setIsPremium(true);
+                    IAP.getPremiumDetails().then(setPremiumDetails);
+                    
                     // Also sync to DB if needed
                     db.getUser(userId).then(u => {
                         if (u && !u.isPremium) {
                              db.saveUser(userId, { ...u, isPremium: true });
                         }
                     });
+                } else {
+                    setIsPremium(false);
+                    setPremiumDetails(null);
                 }
             });
         });
@@ -346,6 +356,19 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         },
         async () => {
           // Re-fetch all notifications on any change to keep it simple
+          const data = await db.getGlobalNotifications();
+          setAppNotifications(data);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: 'id=eq.__global_notifications__',
+        },
+        async () => {
           const data = await db.getGlobalNotifications();
           setAppNotifications(data);
         }
@@ -727,23 +750,29 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
               return [premiumBadge, ...prev];
           });
           setIsPremium(true);
+          IAP.getPremiumDetails().then(setPremiumDetails);
           setNotification({ text: "SUPER PASS UNLOCKED!", type: 'reward' });
       }
   };
 
   // Premium Subscription Logic using IAP Service
-  const unlockPremium = async () => {
+  const unlockPremium = async (pkg?: any) => {
       if (!userId) return;
 
-      // 1. Get Packages
-      const packages = await IAP.getPackages();
-      if (packages.length === 0) {
-          alert("No premium packages available at the moment.");
-          return;
+      let targetPackage = pkg;
+
+      // 1. If no package provided, try to get the first available one
+      if (!targetPackage) {
+          const packages = await IAP.getPackages();
+          if (packages.length === 0) {
+              alert("No premium packages available at the moment.");
+              return;
+          }
+          targetPackage = packages[0];
       }
       
-      // 2. Attempt Purchase of first package (e.g., Monthly)
-      const success = await IAP.purchasePackage(packages[0]);
+      // 2. Attempt Purchase
+      const success = await IAP.purchasePackage(targetPackage);
 
       if (success) {
           await grantPremiumRewards(userId);
@@ -851,7 +880,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     <GamificationContext.Provider value={{ 
       userId, isAdmin, login, logout, isLoading, loadError,
       stats, badges, quests, tradeOffers, userTrades, awardPoints, completeQuest, updateRapport, claimDailyReward, tradeBadge, grantBadge, sendP2PTrade, respondToP2PTrade, 
-      unlockPremium, restorePurchases, isPremium, setThemeColor, setAvatar,
+      unlockPremium, restorePurchases, isPremium, premiumDetails, setThemeColor, setAvatar,
       notification, appNotifications, addAppNotification, deleteAppNotification, leaderboard, mode, setMode, 
       showLevelUp, closeLevelUp: () => setShowLevelUp(false),
       isContactOpen, setIsContactOpen, sendAdminMessage, replyToRequest,
@@ -888,7 +917,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             <p className="text-slate-500 font-bold mb-8">Your English is getting super strong! Keep it up!</p>
             <button 
               onClick={() => setShowLevelUp(false)}
-              className="w-full py-5 bg-gradient-to-r from-fun-blue to-cyan-400 text-white rounded-2xl font-black text-2xl shadow-lg border-b-8 border-sky-700 active:border-b-0 active:translate-y-2 transition-all"
+              className="w-full py-5 bg-gradient-to-r from-fun-blue to-cyan-400 text-white rounded-2xl font-black text-2xl shadow-lg border-b-8 border-blue-800 active:border-b-0 active:translate-y-2 transition-all"
             >
               YAY!
             </button>

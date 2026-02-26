@@ -191,7 +191,12 @@ export interface GamificationContextType {
   
   // Premium Function
   isPremium: boolean;
-  unlockPremium: () => Promise<void>;
+  premiumDetails: {
+    expirationDate?: string;
+    willRenew?: boolean;
+    productIdentifier?: string;
+  } | null;
+  unlockPremium: (pkg?: any) => Promise<void>;
   restorePurchases: () => Promise<void>; // New: Required for App Store compliance
 
   // Contact / Admin Functions
