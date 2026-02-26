@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
-    "start": "node server.ts",
     "preview": "vite preview",
     "type-check": "tsc",
     "lint": "tsc --noEmit"
@@ -15,6 +14,7 @@
     "@capacitor/core": "^5.7.0",
     "@revenuecat/purchases-js": "^1.26.3",
     "@supabase/supabase-js": "^2.39.7",
+    "@types/express": "^5.0.6",
     "express": "^5.2.1",
     "lucide-react": "^0.344.0",
     "motion": "^12.34.3",
@@ -27,7 +27,6 @@
     "tsx": "^4.21.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@vitejs/plugin-react": "^4.2.1",
