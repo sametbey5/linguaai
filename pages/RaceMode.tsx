@@ -39,7 +39,7 @@ const RaceMode: React.FC = () => {
     setRoomId(finalRoomId);
     setIsJoining(true);
 
-    const newSocket = io();
+    const newSocket = io(https://fastidious-axolotl-a15205.netlify.app/);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
