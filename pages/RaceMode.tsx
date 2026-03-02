@@ -28,20 +28,29 @@ const RaceMode: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
-  const [gameState, setGameState] = useState<'lobby' | 'racing' | 'finished'>('lobby');
+  const [gameState, setGameState] = useState<'setup' | 'lobby' | 'racing' | 'finished'>('setup');
   const [winner, setWinner] = useState<Player | null>(null);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [roomId, setRoomId] = useState('');
+  const [isJoining, setIsJoining] = useState(false);
 
-  useEffect(() => {
+  const joinRoom = (id: string) => {
+    const finalRoomId = id || "global_race";
+    setRoomId(finalRoomId);
+    setIsJoining(true);
+
     const newSocket = io();
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
       newSocket.emit('join_race', { 
+        roomId: finalRoomId,
         userId, 
         name: userId || 'Guest', 
         avatar: stats.avatar || '👤' 
       });
+      setGameState('lobby');
+      setIsJoining(false);
     });
 
     newSocket.on('room_update', (data) => {
@@ -69,10 +78,14 @@ const RaceMode: React.FC = () => {
       }
     });
 
+    return newSocket;
+  };
+
+  useEffect(() => {
     return () => {
-      newSocket.disconnect();
+      socket?.disconnect();
     };
-  }, [userId, stats.avatar]);
+  }, [socket]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,13 +100,72 @@ const RaceMode: React.FC = () => {
         const nextIndex = currentIndex + 1;
         setCurrentIndex(nextIndex);
         setAnswer('');
-        socket?.emit('update_progress', { progress: nextIndex });
+        socket?.emit('update_progress', { roomId, progress: nextIndex });
       }, 500);
     } else {
       setFeedback('wrong');
       setTimeout(() => setFeedback(null), 500);
     }
   };
+
+  const startRaceNow = () => {
+    socket?.emit('start_race_now', { roomId });
+  };
+
+  if (gameState === 'setup') {
+    return (
+      <div className="max-w-4xl mx-auto p-6 space-y-8 animate-fade-in">
+        <div className="text-center space-y-4">
+          <div className="inline-block p-4 bg-fun-yellow rounded-full shadow-lg">
+            <Flag size={48} className="text-slate-800" />
+          </div>
+          <h2 className={`text-5xl font-black ${isKids ? 'rainbow-text' : 'text-slate-900'}`}>
+            LIVE WORD RACE
+          </h2>
+          <p className="text-xl font-bold text-slate-500">Compete with others in real-time!</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-white rounded-[3rem] p-8 border-4 border-slate-100 shadow-xl space-y-6">
+            <h3 className="text-2xl font-black text-slate-800">Global Race</h3>
+            <p className="text-slate-500">Join the public lobby and wait for opponents.</p>
+            <Button 
+              variant="primary" 
+              fullWidth 
+              className="py-6 text-xl rounded-3xl"
+              onClick={() => joinRoom('global_race')}
+              disabled={isJoining}
+            >
+              {isJoining ? 'Joining...' : 'Join Global Lobby'}
+            </Button>
+          </div>
+
+          <div className="bg-white rounded-[3rem] p-8 border-4 border-slate-100 shadow-xl space-y-6">
+            <h3 className="text-2xl font-black text-slate-800">Private Room</h3>
+            <p className="text-slate-500">Create or join a private room with a code.</p>
+            <div className="space-y-4">
+              <input 
+                type="text" 
+                placeholder="Enter Room Code..." 
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                className="w-full p-4 rounded-2xl border-2 border-slate-200 font-black text-center text-xl focus:border-fun-blue outline-none"
+              />
+              <Button 
+                variant="secondary" 
+                fullWidth 
+                className="py-6 text-xl rounded-3xl"
+                onClick={() => joinRoom(roomId)}
+                disabled={!roomId || isJoining}
+              >
+                {isJoining ? 'Joining...' : 'Join / Create Room'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (gameState === 'lobby') {
     return (
@@ -103,7 +175,7 @@ const RaceMode: React.FC = () => {
             <Users size={48} className="text-slate-800" />
           </div>
           <h2 className={`text-5xl font-black ${isKids ? 'rainbow-text' : 'text-slate-900'}`}>
-            WORD RACE LOBBY
+            {roomId === 'global_race' ? 'GLOBAL LOBBY' : `ROOM: ${roomId}`}
           </h2>
           <p className="text-xl font-bold text-slate-500">Waiting for opponents to join the race...</p>
         </div>
@@ -142,11 +214,32 @@ const RaceMode: React.FC = () => {
             ))}
           </div>
 
-          {room?.players.length === 1 && (
-            <div className="mt-12 p-6 bg-blue-50 rounded-2xl border-2 border-blue-100 text-center">
-              <p className="text-blue-600 font-bold">Invite a friend to this URL to race together!</p>
-            </div>
-          )}
+          <div className="mt-12 flex flex-col items-center gap-4">
+            {room?.players && room.players.length === 1 ? (
+              <div className="p-6 bg-blue-50 rounded-2xl border-2 border-blue-100 text-center w-full">
+                <p className="text-blue-600 font-bold">Invite a friend with code: <span className="text-2xl font-black underline">{roomId}</span></p>
+              </div>
+            ) : (
+              <p className="text-slate-500 font-bold">Race will start automatically when 2 players join.</p>
+            )}
+            
+            {room?.players && room.players.length >= 1 && (
+              <Button 
+                variant="primary" 
+                className="px-12 py-4 rounded-2xl"
+                onClick={startRaceNow}
+              >
+                Start Race Now
+              </Button>
+            )}
+            
+            <button 
+              onClick={() => window.location.reload()}
+              className="text-slate-400 font-bold hover:text-slate-600 transition-colors"
+            >
+              Leave Room
+            </button>
+          </div>
         </div>
       </div>
     );

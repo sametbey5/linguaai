@@ -49,15 +49,16 @@ async function startServer() {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    socket.on("join_race", ({ userId, name, avatar }) => {
-      let roomId = "global_race";
-      socket.join(roomId);
+    socket.on("join_race", ({ roomId, userId, name, avatar }) => {
+      const targetRoomId = roomId || "global_race";
+      socket.join(targetRoomId);
+      (socket as any).currentRoom = targetRoomId;
 
-      if (!rooms.has(roomId)) {
-        rooms.set(roomId, { players: [], questions: [], status: 'waiting' });
+      if (!rooms.has(targetRoomId)) {
+        rooms.set(targetRoomId, { players: [], questions: [], status: 'waiting' });
       }
 
-      const room = rooms.get(roomId);
+      const room = rooms.get(targetRoomId);
       
       // Add or update player
       const playerIndex = room.players.findIndex((p: any) => p.userId === userId);
@@ -69,19 +70,26 @@ async function startServer() {
         room.players.push(playerData);
       }
 
-      io.to(roomId).emit("room_update", room);
+      io.to(targetRoomId).emit("room_update", room);
 
-      // Start race if enough players
+      // Start race if enough players in global, or if owner starts it in private (simplified for now: auto-start at 2)
       if (room.players.length >= 2 && room.status === 'waiting') {
         room.status = 'racing';
-        // Pick 10 random questions
+        room.questions = [...WORDS_POOL].sort(() => 0.5 - Math.random()).slice(0, 10);
+        io.to(targetRoomId).emit("race_start", { questions: room.questions });
+      }
+    });
+
+    socket.on("start_race_now", ({ roomId }) => {
+      const room = rooms.get(roomId);
+      if (room && room.status === 'waiting' && room.players.length >= 1) {
+        room.status = 'racing';
         room.questions = [...WORDS_POOL].sort(() => 0.5 - Math.random()).slice(0, 10);
         io.to(roomId).emit("race_start", { questions: room.questions });
       }
     });
 
-    socket.on("update_progress", ({ progress }) => {
-      const roomId = "global_race";
+    socket.on("update_progress", ({ roomId, progress }) => {
       const room = rooms.get(roomId);
       if (!room) return;
 
@@ -92,7 +100,6 @@ async function startServer() {
           player.finished = true;
           player.finishTime = Date.now();
           
-          // Check if everyone finished or if this is the first winner
           const winners = room.players.filter((p: any) => p.finished).sort((a: any, b: any) => a.finishTime - b.finishTime);
           if (winners.length === 1) {
              io.to(roomId).emit("winner_announced", player);
@@ -103,15 +110,17 @@ async function startServer() {
     });
 
     socket.on("disconnect", () => {
-      const roomId = "global_race";
-      const room = rooms.get(roomId);
-      if (room) {
-        room.players = room.players.filter((p: any) => p.socketId !== socket.id);
-        if (room.players.length === 0) {
-          room.status = 'waiting';
-          room.questions = [];
+      const roomId = (socket as any).currentRoom;
+      if (roomId) {
+        const room = rooms.get(roomId);
+        if (room) {
+          room.players = room.players.filter((p: any) => p.socketId !== socket.id);
+          if (room.players.length === 0) {
+            rooms.delete(roomId);
+          } else {
+            io.to(roomId).emit("room_update", room);
+          }
         }
-        io.to(roomId).emit("room_update", room);
       }
     });
   });

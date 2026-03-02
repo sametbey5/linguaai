@@ -5,6 +5,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'danger' | 'pro-primary' | 'pro-outline';
   isLoading?: boolean;
   icon?: React.ReactNode;
+  fullWidth?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({ 
@@ -12,14 +13,15 @@ const Button: React.FC<ButtonProps> = ({
   variant = 'primary', 
   isLoading = false, 
   icon,
+  fullWidth = false,
   className = '',
   ...props 
 }) => {
   // Styles for "Fun" mode (default)
-  const funBase = "inline-flex items-center justify-center px-6 py-3 rounded-2xl font-bold text-lg transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-offset-2 transform active:scale-95 active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed border-b-4";
+  const funBase = `inline-flex items-center justify-center px-6 py-3 rounded-2xl font-bold text-lg transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-offset-2 transform active:scale-95 active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed border-b-4 ${fullWidth ? 'w-full' : ''}`;
   
   // Styles for "Professional" mode
-  const proBase = "inline-flex items-center justify-center px-4 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm";
+  const proBase = `inline-flex items-center justify-center px-4 py-2.5 rounded-lg font-medium text-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm ${fullWidth ? 'w-full' : ''}`;
 
   const variants = {
     // Fun Variants
