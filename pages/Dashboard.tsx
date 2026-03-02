@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Brain, Sword, Star, Flame, CheckCircle2, Rocket, PlayCircle, Sparkles, Wand2, RocketIcon, BarChart, ArrowRight, BookOpen, Clock, Target, Calendar, Award, Palette, X, Smile, Mic, Ear, Globe, Map, Settings, Flag } from 'lucide-react';
+import { Zap, Brain, Sword, Star, Flame, CheckCircle2, Rocket, PlayCircle, Sparkles, Wand2, RocketIcon, BarChart, ArrowRight, BookOpen, Clock, Target, Calendar, Award, Palette, X, Smile, Mic, Ear, Globe, Map, Settings, Flag, MonitorPlay } from 'lucide-react';
 import Button from '../components/Button';
 import { Badge, SkillTree } from '../types';
 import { useGamification } from '../context/GamificationContext';
@@ -238,6 +238,14 @@ const Dashboard: React.FC = () => {
                         icon={<Brain />} 
                         color="bg-fun-blue" 
                         onClick={() => navigate('/game/scramble')}
+                        completed={false}
+                    />
+                    <DailyFlowCard 
+                        title="Watch: Lingavo Learns" 
+                        time="5 min • Immersive" 
+                        icon={<MonitorPlay />} 
+                        color="bg-[#00F798]" 
+                        onClick={() => navigate('/videos')}
                         completed={false}
                     />
                 </div>

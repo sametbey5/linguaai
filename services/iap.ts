@@ -101,11 +101,21 @@ export const IAP = {
      * Check if user currently has premium access
      */
     async checkSubscriptionStatus(): Promise<boolean> {
+        if (!REVENUECAT_API_KEY || REVENUECAT_API_KEY.includes('test_XjrJUEZlhPvadEFYDeUeZOycWLV')) {
+            // Return false gracefully if key is missing or placeholder
+            return false;
+        }
+
         try {
             const purchases = getPurchases();
             const customerInfo: CustomerInfo = await purchases.getCustomerInfo();
             return customerInfo.entitlements.active.hasOwnProperty("premium");
-        } catch (error) {
+        } catch (error: any) {
+            // Suppress network errors which are common in dev/preview environments
+            if (error.message && (error.message.includes('network') || error.message.includes('connection'))) {
+                console.warn("IAP: Network error checking subscription (likely offline or blocked). Defaulting to free tier.");
+                return false;
+            }
             console.error("IAP: Error checking subscription status", error);
             return false;
         }

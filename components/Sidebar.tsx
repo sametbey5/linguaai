@@ -12,6 +12,7 @@ const Sidebar: React.FC = () => {
 
   const navItems = [
     { name: isKids ? 'Arcade Home' : 'Overview', path: '/', icon: <LayoutDashboard size={isKids ? 24 : 20} />, color: 'text-fun-blue' },
+    { name: <img src="https://i.ibb.co/MyJNdByd/lingavolearns.png" alt="Lingavo Learns" className="h-6 object-contain" />, path: '/videos', icon: <MonitorPlay size={isKids ? 24 : 20} />, color: 'text-[#00F798]' },
     { name: isKids ? 'News' : 'Notifications', path: '/notifications', icon: <Bell size={isKids ? 24 : 20} />, color: 'text-fun-orange' },
     { name: isKids ? 'Quest Mode' : 'Scenarios', path: '/roleplay', icon: isKids ? <Sword size={24} /> : <MessageCircle size={20} />, color: 'text-fun-pink' },
     { name: isKids ? 'Talk to Friend' : 'Live Conversation', path: '/talk', icon: <Mic size={isKids ? 24 : 20} />, color: 'text-fun-green' }, 
@@ -20,7 +21,6 @@ const Sidebar: React.FC = () => {
     { name: isKids ? 'Live Race' : 'Competitive Race', path: '/race', icon: <Flag size={isKids ? 24 : 20} />, color: 'text-red-500' },
     { name: isKids ? 'Grammar Coach' : 'AI Coach', path: '/grammar', icon: <GraduationCap size={isKids ? 24 : 20} />, color: 'text-fun-purple' },
     { name: isKids ? 'Scramble' : 'Grammar Lessons', path: isKids ? '/game/scramble' : '/grammar-lessons', icon: isKids ? <Brain size={24} /> : <PenTool size={20} />, color: 'text-fun-purple' },
-    { name: isKids ? 'TV Time' : 'Video Content', path: '/videos', icon: <MonitorPlay size={isKids ? 24 : 20} />, color: 'text-fun-orange' },
     { name: isKids ? 'Trading Post' : 'Exchange', path: '/trading', icon: isKids ? <Store size={24} /> : <ArrowRightLeft size={20} />, color: 'text-teal-500' },
     { name: isKids ? 'Leaderboard' : 'Analytics', path: '/leaderboard', icon: isKids ? <Trophy size={24} /> : <BarChart3 size={20} />, color: 'text-fun-green' },
   ];

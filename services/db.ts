@@ -594,5 +594,91 @@ export const db = {
       console.error("Failed to delete notification", e);
       return false;
     }
+  },
+
+  /**
+   * Lingavo Learns Integration
+   * Fetches channels from lingavolearnsuserbase and their associated videos.
+   */
+  async getLingavoLearnsVideos(): Promise<any[]> {
+    try {
+      // 1. Get channels from lingavolearnsuserbase
+      const { data: channels, error: channelError } = await supabase
+        .from('lingavolearnsuserbase')
+        .select('*'); // Select all to see what's available
+
+      if (channelError) {
+        console.error("Supabase: Error fetching from lingavolearnsuserbase", channelError);
+        return [];
+      }
+
+      if (!channels || channels.length === 0) {
+        console.warn("Supabase: No channels found in lingavolearnsuserbase");
+        return [];
+      }
+
+      // Find the channel link column (could be channellink, channel_link, link, etc.)
+      const getLink = (c: any) => c.channellink || c.channel_link || c.link || c.url;
+      const channelLinks = channels.map(getLink).filter(link => !!link);
+      
+      if (channelLinks.length === 0) {
+        console.warn("Supabase: Channels found but no valid links detected in columns (channellink, channel_link, link, url)");
+        return [];
+      }
+
+      // 2. Get videos for these channels
+      let videos: any[] = [];
+      
+      // Try 'lingavolearnsvideos'
+      const { data: v1, error: e1 } = await supabase
+        .from('lingavolearnsvideos')
+        .select('*')
+        .in('channellink', channelLinks);
+      
+      if (!e1 && v1 && v1.length > 0) {
+        videos = v1;
+      } else {
+        // Try 'videos'
+        const { data: v2, error: e2 } = await supabase
+          .from('videos')
+          .select('*')
+          .in('channellink', channelLinks);
+        
+        if (!e2 && v2 && v2.length > 0) {
+          videos = v2;
+        } else {
+          // Final attempt: try filtering by 'channel_link' instead of 'channellink'
+          const { data: v3 } = await supabase
+            .from('lingavolearnsvideos')
+            .select('*')
+            .in('channel_link', channelLinks);
+          if (v3 && v3.length > 0) videos = v3;
+        }
+      }
+
+      // 3. Map fields flexibly to match the UI expectations
+      return videos.map(v => {
+        // Find the channel that matches this video's channellink
+        const channel = channels.find((c: any) => getLink(c) === (v.channellink || v.channel_link));
+        // Get profile picture from channel (avatar, profile_picture, image, etc.)
+        const channelAvatar = channel ? (channel.avatar || channel.profile_picture || channel.image || channel.icon) : null;
+
+        return {
+          id: v.id || v.video_id || `vid_${Math.random().toString(36).substr(2, 9)}`,
+          title: v.title || v.name || v.video_title || 'Learning Video',
+          category: v.category || v.tag || v.topic || 'General',
+          color: v.color || (['bg-fun-pink', 'bg-fun-blue', 'bg-fun-green', 'bg-fun-purple'][Math.floor(Math.random() * 4)]),
+          url: v.url || v.video_url || v.link || v.src,
+          author: v.author || v.creator || v.channel_name || v.username || (channel ? (channel.name || channel.username) : '@LingavoTeacher'),
+          description: v.description || v.caption || v.text || 'Check out this learning clip!',
+          likes: String(v.likes || v.like_count || Math.floor(Math.random() * 1000)),
+          comments: String(v.comments || v.comment_count || Math.floor(Math.random() * 100)),
+          avatar: channelAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${v.author || 'Lingavo'}`
+        };
+      });
+    } catch (e) {
+      console.error("Lingavo Learns fetch exception", e);
+      return [];
+    }
   }
 };

@@ -2,7 +2,7 @@
 import React, { ReactNode, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { Menu, X, LayoutDashboard, MessageCircle, BookOpen, PenTool, Trophy, Gamepad2, Briefcase, MonitorPlay, Crown, Store, ArrowRightLeft, LogOut, User, HelpCircle, Globe, ChevronDown, Bell } from 'lucide-react';
+import { Menu, X, LayoutDashboard, MessageCircle, BookOpen, PenTool, Trophy, Gamepad2, Briefcase, MonitorPlay, Crown, Store, ArrowRightLeft, LogOut, User, HelpCircle, Globe, ChevronDown, Bell, Flag, ShieldCheck } from 'lucide-react';
 import { useGamification } from '../context/GamificationContext';
 import ContactModal from './ContactModal';
 import { SUPPORTED_LANGUAGES } from '../constants';
@@ -14,7 +14,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const { mode, userId, logout, setIsContactOpen, preferredLanguage, updateProfile } = useGamification();
+  const { mode, userId, logout, setIsContactOpen, preferredLanguage, updateProfile, isAdmin } = useGamification();
   const isKids = mode === 'kids';
 
   const handleLanguageChange = async (lang: string) => {
@@ -24,15 +24,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const navItems = [
     { name: isKids ? 'My Dashboard' : 'Dashboard', path: '/', icon: <LayoutDashboard size={24} />, color: isKids ? 'text-fun-blue' : 'text-slate-600' },
+    { name: <img src="https://i.ibb.co/MyJNdByd/lingavolearns.png" alt="Lingavo Learns" className="h-6 object-contain" />, path: '/videos', icon: <MonitorPlay size={24} />, color: 'text-[#00F798]' },
     { name: isKids ? 'News' : 'Notifications', path: '/notifications', icon: <Bell size={24} />, color: isKids ? 'text-fun-orange' : 'text-slate-600' },
-    { name: isKids ? 'Chat Games' : 'Roleplay', path: '/roleplay', icon: <MessageCircle size={24} />, color: isKids ? 'text-fun-pink' : 'text-slate-600' },
+    { name: isKids ? 'Quest Mode' : 'Scenarios', path: '/roleplay', icon: <MessageCircle size={24} />, color: isKids ? 'text-fun-pink' : 'text-slate-600' },
+    { name: isKids ? 'Live Race' : 'Competitive Race', path: '/race', icon: <Flag size={24} />, color: 'text-red-500' },
     { name: isKids ? 'Word Cards' : 'Vocabulary', path: '/vocab', icon: <BookOpen size={24} />, color: isKids ? 'text-fun-green' : 'text-slate-600' },
     { name: isKids ? 'Word Fixer' : 'Grammar', path: isKids ? '/grammar' : '/grammar-lessons', icon: <PenTool size={24} />, color: isKids ? 'text-fun-purple' : 'text-slate-600' },
-    { name: isKids ? 'TV Time' : 'Videos', path: '/videos', icon: <MonitorPlay size={24} />, color: isKids ? 'text-fun-orange' : 'text-slate-600' },
     { name: isKids ? 'Trading Post' : 'Exchange', path: '/trading', icon: isKids ? <Store size={24} /> : <ArrowRightLeft size={24} />, color: isKids ? 'text-teal-500' : 'text-slate-600' },
     { name: isKids ? 'Winners' : 'Leaderboard', path: '/leaderboard', icon: <Trophy size={24} />, color: isKids ? 'text-fun-yellow' : 'text-slate-600' },
     { name: isKids ? 'Super Pass' : 'Premium', path: '/premium', icon: <Crown size={24} />, color: isKids ? 'text-amber-500' : 'text-amber-600' },
   ];
+
+  if (isAdmin) {
+    navItems.push({ name: 'Admin Zone', path: '/admin', icon: <ShieldCheck size={24} />, color: 'text-red-600' });
+  }
 
   return (
     <div className={`min-h-screen ${isKids ? 'font-sans bg-white' : 'font-adult bg-slate-50 text-slate-900'}`}>
