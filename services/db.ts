@@ -600,9 +600,97 @@ export const db = {
    * Lingavo Learns Integration
    * Fetches channels from lingavolearnsuserbase and their associated videos.
    */
+  /**
+   * Race Mode Integration (Supabase Realtime)
+   * 
+   * SQL SETUP:
+   * CREATE TABLE race_rooms (
+   *   id TEXT PRIMARY KEY,
+   *   status TEXT DEFAULT 'waiting', -- 'waiting', 'racing', 'finished'
+   *   questions JSONB DEFAULT '[]',
+   *   created_at TIMESTAMPTZ DEFAULT now(),
+   *   updated_at TIMESTAMPTZ DEFAULT now()
+   * );
+   * 
+   * ALTER TABLE race_rooms ENABLE ROW LEVEL SECURITY;
+   * CREATE POLICY "Allow public all" ON race_rooms FOR ALL USING (true);
+   * ALTER PUBLICATION supabase_realtime ADD TABLE race_rooms;
+   */
+  async getRaceRooms(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('race_rooms')
+        .select('*')
+        .eq('status', 'waiting')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        // Fallback or handle missing table
+        if (error.code === '42P01') {
+          console.warn("Supabase: 'race_rooms' table not found. Please run the SQL setup in db.ts.");
+          return [];
+        }
+        throw error;
+      }
+      return data || [];
+    } catch (e) {
+      console.error("Failed to fetch race rooms", e);
+      return [];
+    }
+  },
+
+  async createRaceRoom(roomId: string, questions: any[]): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('race_rooms')
+        .insert({
+          id: roomId,
+          status: 'waiting',
+          questions: questions
+        });
+      
+      if (error) {
+        if (error.code === '42P01') return false;
+        throw error;
+      }
+      return true;
+    } catch (e) {
+      console.error("Failed to create race room", e);
+      return false;
+    }
+  },
+
+  async updateRaceRoomStatus(roomId: string, status: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('race_rooms')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', roomId);
+      
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error("Failed to update race room status", e);
+      return false;
+    }
+  },
+
+  async deleteRaceRoom(roomId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('race_rooms')
+        .delete()
+        .eq('id', roomId);
+      
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error("Failed to delete race room", e);
+      return false;
+    }
+  },
   async getLingavoLearnsVideos(): Promise<any[]> {
     try {
-      // 1. Get channels from lingavolearnsuserbase
       const { data: channels, error: channelError } = await supabase
         .from('lingavolearnsuserbase')
         .select('*'); // Select all to see what's available

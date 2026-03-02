@@ -1,18 +1,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { useGamification } from '../context/GamificationContext';
-import { Trophy, Users, Zap, Timer, Flag, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { Trophy, Users, Zap, Timer, Flag, CheckCircle2, XCircle, ArrowRight, Loader2 } from 'lucide-react';
 import Button from '../components/Button';
 import { motion, AnimatePresence } from 'motion/react';
+import { supabase } from '../services/supabaseClient';
+import { db } from '../services/db';
 
 interface Player {
-  socketId: string;
   userId: string;
   name: string;
   avatar: string;
   progress: number;
   finished: boolean;
+  finishTime?: number;
+  presence_ref?: string;
 }
 
 interface Question {
@@ -20,11 +22,33 @@ interface Question {
   a: string;
 }
 
+const WORDS_POOL = [
+  { q: "Apple", a: "Elma" },
+  { q: "Book", a: "Kitap" },
+  { q: "School", a: "Okul" },
+  { q: "Friend", a: "Arkadaş" },
+  { q: "Water", a: "Su" },
+  { q: "Bread", a: "Ekmek" },
+  { q: "House", a: "Ev" },
+  { q: "Car", a: "Araba" },
+  { q: "Sun", a: "Güneş" },
+  { q: "Moon", a: "Ay" },
+  { q: "Star", a: "Yıldız" },
+  { q: "Tree", a: "Ağaç" },
+  { q: "Flower", a: "Çiçek" },
+  { q: "Bird", a: "Kuş" },
+  { q: "Dog", a: "Köpek" },
+  { q: "Cat", a: "Kedi" },
+  { q: "Fish", a: "Balık" },
+  { q: "Milk", a: "Süt" },
+  { q: "Cheese", a: "Peynir" },
+  { q: "Egg", a: "Yumurta" }
+];
+
 const RaceMode: React.FC = () => {
   const { userId, stats, mode, awardPoints } = useGamification();
   const isKids = mode === 'kids';
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [room, setRoom] = useState<{ players: Player[], status: string } | null>(null);
+  const [roomPlayers, setRoomPlayers] = useState<Player[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -33,59 +57,85 @@ const RaceMode: React.FC = () => {
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [roomId, setRoomId] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+  const channelRef = useRef<any>(null);
 
-  const joinRoom = (id: string) => {
+  const joinRoom = async (id: string) => {
     const finalRoomId = id || "global_race";
     setRoomId(finalRoomId);
     setIsJoining(true);
 
-    const newSocket = io(https://fastidious-axolotl-a15205.netlify.app/);
-    setSocket(newSocket);
+    // 1. Create room in DB if it doesn't exist (for metadata)
+    const existingRooms = await db.getRaceRooms();
+    const roomExists = existingRooms.find(r => r.id === finalRoomId);
+    
+    if (!roomExists) {
+      const randomQuestions = [...WORDS_POOL].sort(() => 0.5 - Math.random()).slice(0, 10);
+      await db.createRaceRoom(finalRoomId, randomQuestions);
+      setQuestions(randomQuestions);
+    } else {
+      setQuestions(roomExists.questions || []);
+      if (roomExists.status === 'racing') {
+        setGameState('racing');
+      }
+    }
 
-    newSocket.on('connect', () => {
-      newSocket.emit('join_race', { 
-        roomId: finalRoomId,
-        userId, 
-        name: userId || 'Guest', 
-        avatar: stats.avatar || '👤' 
-      });
-      setGameState('lobby');
-      setIsJoining(false);
+    // 2. Setup Realtime Channel
+    const channel = supabase.channel(`race:${finalRoomId}`, {
+      config: {
+        presence: {
+          key: userId || 'anonymous',
+        },
+      },
     });
 
-    newSocket.on('room_update', (data) => {
-      setRoom(data);
-      if (data.status === 'waiting') {
-        setGameState('lobby');
-        setWinner(null);
+    channelRef.current = channel;
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const players: Player[] = Object.values(state).flat() as any;
+        setRoomPlayers(players);
+      })
+      .on('broadcast', { event: 'race_start' }, (payload) => {
+        setQuestions(payload.questions);
+        setGameState('racing');
         setCurrentIndex(0);
-        setQuestions([]);
-      }
-    });
-
-    newSocket.on('race_start', (data) => {
-      setQuestions(data.questions);
-      setGameState('racing');
-      setCurrentIndex(0);
-      setAnswer('');
-    });
-
-    newSocket.on('winner_announced', (player) => {
-      setWinner(player);
-      setGameState('finished');
-      if (player.userId === userId) {
-        awardPoints(500, "Race Winner!");
-      }
-    });
-
-    return newSocket;
+        setAnswer('');
+      })
+      .on('broadcast', { event: 'progress_update' }, (payload) => {
+        setRoomPlayers(prev => prev.map(p => 
+          p.userId === payload.userId ? { ...p, progress: payload.progress, finished: payload.finished, finishTime: payload.finishTime } : p
+        ));
+      })
+      .on('broadcast', { event: 'winner_announced' }, (payload) => {
+        setWinner(payload.winner);
+        setGameState('finished');
+        if (payload.winner.userId === userId) {
+          awardPoints(500, "Race Winner!");
+        }
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            userId,
+            name: userId || 'Guest',
+            avatar: stats.avatar || '👤',
+            progress: 0,
+            finished: false,
+          });
+          setGameState('lobby');
+          setIsJoining(false);
+        }
+      });
   };
 
   useEffect(() => {
     return () => {
-      socket?.disconnect();
+      if (channelRef.current) {
+        channelRef.current.unsubscribe();
+      }
     };
-  }, [socket]);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,9 +148,31 @@ const RaceMode: React.FC = () => {
       setTimeout(() => {
         setFeedback(null);
         const nextIndex = currentIndex + 1;
+        const isFinished = nextIndex >= questions.length;
+        
         setCurrentIndex(nextIndex);
         setAnswer('');
-        socket?.emit('update_progress', { roomId, progress: nextIndex });
+
+        // Update Presence & Broadcast
+        channelRef.current?.send({
+          type: 'broadcast',
+          event: 'progress_update',
+          payload: { userId, progress: nextIndex, finished: isFinished, finishTime: isFinished ? Date.now() : undefined }
+        });
+
+        if (isFinished) {
+          // Check if we are the first winner
+          const otherFinished = roomPlayers.some(p => p.finished && p.userId !== userId);
+          if (!otherFinished) {
+            const winnerData = { userId, name: userId || 'Guest', avatar: stats.avatar || '👤' };
+            channelRef.current?.send({
+              type: 'broadcast',
+              event: 'winner_announced',
+              payload: { winner: winnerData }
+            });
+            db.updateRaceRoomStatus(roomId, 'finished');
+          }
+        }
       }, 500);
     } else {
       setFeedback('wrong');
@@ -108,8 +180,18 @@ const RaceMode: React.FC = () => {
     }
   };
 
-  const startRaceNow = () => {
-    socket?.emit('start_race_now', { roomId });
+  const startRaceNow = async () => {
+    const randomQuestions = [...WORDS_POOL].sort(() => 0.5 - Math.random()).slice(0, 10);
+    setQuestions(randomQuestions);
+    setGameState('racing');
+    
+    channelRef.current?.send({
+      type: 'broadcast',
+      event: 'race_start',
+      payload: { questions: randomQuestions }
+    });
+
+    await db.updateRaceRoomStatus(roomId, 'racing');
   };
 
   if (gameState === 'setup') {
@@ -122,7 +204,7 @@ const RaceMode: React.FC = () => {
           <h2 className={`text-5xl font-black ${isKids ? 'rainbow-text' : 'text-slate-900'}`}>
             LIVE WORD RACE
           </h2>
-          <p className="text-xl font-bold text-slate-500">Compete with others in real-time!</p>
+          <p className="text-xl font-bold text-slate-500">Compete with others in real-time via Supabase!</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -183,20 +265,20 @@ const RaceMode: React.FC = () => {
         <div className="bg-white rounded-[3rem] p-8 border-4 border-slate-100 shadow-xl">
           <div className="flex items-center justify-between mb-8">
             <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-              <Users className="text-fun-blue" /> Players ({room?.players.length || 0})
+              <Users className="text-fun-blue" /> Players ({roomPlayers.length})
             </h3>
             <div className="flex items-center gap-2 text-fun-green font-bold">
               <div className="w-3 h-3 bg-fun-green rounded-full animate-pulse" />
-              Live Server
+              Supabase Realtime
             </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {room?.players.map((player) => (
+            {roomPlayers.map((player) => (
               <motion.div 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                key={player.socketId} 
+                key={player.userId} 
                 className="flex flex-col items-center p-4 bg-slate-50 rounded-3xl border-2 border-slate-100 relative"
               >
                 <div className="text-5xl mb-2">{player.avatar}</div>
@@ -206,7 +288,7 @@ const RaceMode: React.FC = () => {
                 )}
               </motion.div>
             ))}
-            {Array.from({ length: Math.max(0, 4 - (room?.players.length || 0)) }).map((_, i) => (
+            {Array.from({ length: Math.max(0, 4 - roomPlayers.length) }).map((_, i) => (
               <div key={i} className="flex flex-col items-center p-4 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200 opacity-50">
                 <div className="text-5xl mb-2 grayscale">👤</div>
                 <span className="font-bold text-slate-300">Searching...</span>
@@ -215,15 +297,15 @@ const RaceMode: React.FC = () => {
           </div>
 
           <div className="mt-12 flex flex-col items-center gap-4">
-            {room?.players && room.players.length === 1 ? (
+            {roomPlayers.length === 1 ? (
               <div className="p-6 bg-blue-50 rounded-2xl border-2 border-blue-100 text-center w-full">
                 <p className="text-blue-600 font-bold">Invite a friend with code: <span className="text-2xl font-black underline">{roomId}</span></p>
               </div>
             ) : (
-              <p className="text-slate-500 font-bold">Race will start automatically when 2 players join.</p>
+              <p className="text-slate-500 font-bold">Ready to start the race!</p>
             )}
             
-            {room?.players && room.players.length >= 1 && (
+            {roomPlayers.length >= 1 && (
               <Button 
                 variant="primary" 
                 className="px-12 py-4 rounded-2xl"
@@ -248,18 +330,17 @@ const RaceMode: React.FC = () => {
   if (gameState === 'racing') {
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-8 animate-fade-in">
-        {/* Progress Bars */}
         <div className="bg-white rounded-[2rem] p-6 border-4 border-slate-100 shadow-lg space-y-4">
-          {room?.players.map((player) => (
-            <div key={player.socketId} className="space-y-1">
+          {roomPlayers.map((player) => (
+            <div key={player.userId} className="space-y-1">
               <div className="flex justify-between text-xs font-black text-slate-500 uppercase tracking-wider">
                 <span className="flex items-center gap-1">{player.avatar} {player.name}</span>
-                <span>{player.progress} / {questions.length}</span>
+                <span>{player.progress || 0} / {questions.length}</span>
               </div>
               <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: `${(player.progress / questions.length) * 100}%` }}
+                  animate={{ width: `${((player.progress || 0) / questions.length) * 100}%` }}
                   className={`h-full transition-all duration-300 ${player.userId === userId ? 'bg-fun-blue' : 'bg-slate-400'}`}
                 />
               </div>
@@ -267,7 +348,6 @@ const RaceMode: React.FC = () => {
           ))}
         </div>
 
-        {/* Question Area */}
         <div className="bg-white rounded-[3rem] p-12 border-b-[12px] border-slate-100 shadow-2xl text-center space-y-8 relative overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
