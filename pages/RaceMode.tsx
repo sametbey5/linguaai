@@ -119,7 +119,7 @@ const RaceMode: React.FC = () => {
           await channel.track({
             userId,
             name: userId || 'Guest',
-            avatar: stats.avatar || '👤',
+            avatar: stats.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
             progress: 0,
             finished: false,
           });
@@ -164,7 +164,7 @@ const RaceMode: React.FC = () => {
           // Check if we are the first winner
           const otherFinished = roomPlayers.some(p => p.finished && p.userId !== userId);
           if (!otherFinished) {
-            const winnerData = { userId, name: userId || 'Guest', avatar: stats.avatar || '👤' };
+            const winnerData = { userId, name: userId || 'Guest', avatar: stats.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix' };
             channelRef.current?.send({
               type: 'broadcast',
               event: 'winner_announced',
@@ -281,7 +281,14 @@ const RaceMode: React.FC = () => {
                 key={player.userId} 
                 className="flex flex-col items-center p-4 bg-slate-50 rounded-3xl border-2 border-slate-100 relative"
               >
-                <div className="text-5xl mb-2">{player.avatar}</div>
+                <div className="w-16 h-16 rounded-2xl bg-white border-2 border-slate-200 overflow-hidden shadow-sm mb-2">
+                  <img 
+                    src={player.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
+                    alt={player.name} 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
                 <span className="font-black text-slate-700 truncate w-full text-center">{player.name}</span>
                 {player.userId === userId && (
                   <span className="absolute -top-2 -right-2 bg-fun-blue text-white text-[10px] px-2 py-1 rounded-full font-black">YOU</span>
@@ -334,7 +341,17 @@ const RaceMode: React.FC = () => {
           {roomPlayers.map((player) => (
             <div key={player.userId} className="space-y-1">
               <div className="flex justify-between text-xs font-black text-slate-500 uppercase tracking-wider">
-                <span className="flex items-center gap-1">{player.avatar} {player.name}</span>
+                <span className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-md overflow-hidden border border-slate-200">
+                    <img 
+                      src={player.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
+                      alt={player.name} 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  {player.name}
+                </span>
                 <span>{player.progress || 0} / {questions.length}</span>
               </div>
               <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
@@ -405,7 +422,14 @@ const RaceMode: React.FC = () => {
         
         <div className="bg-white rounded-[3rem] p-8 border-4 border-slate-100 shadow-xl max-w-md mx-auto">
           <div className="text-2xl font-black text-slate-500 mb-4 uppercase tracking-widest">Winner</div>
-          <div className="text-8xl mb-4">{winner?.avatar}</div>
+          <div className="w-32 h-32 rounded-[2rem] bg-slate-100 border-4 border-white shadow-xl mx-auto mb-4 overflow-hidden">
+            <img 
+              src={winner?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
+              alt={winner?.name} 
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          </div>
           <div className="text-3xl font-black text-slate-800">{winner?.name}</div>
           {isWinner && (
             <div className="mt-6 p-4 bg-fun-green/10 rounded-2xl text-fun-green font-black flex items-center justify-center gap-2">

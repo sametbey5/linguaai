@@ -6,7 +6,7 @@ import { UserProfile } from '../types';
 import { useGamification } from '../context/GamificationContext';
 import { BadgeDisplayKids, BadgeDisplayPro } from '../components/BadgeDisplay';
 import Button from '../components/Button';
-import { ChevronLeft, Trophy, Star, Flame, User, LayoutDashboard } from 'lucide-react';
+import { ChevronLeft, Trophy, Star, Flame, User, LayoutDashboard, Crown, ShieldCheck, GraduationCap } from 'lucide-react';
 
 const UserProfileView: React.FC = () => {
     const { userId } = useParams<{ userId: string }>();
@@ -45,16 +45,36 @@ const UserProfileView: React.FC = () => {
     if (!isKids) {
         return (
             <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
-                <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
-                    <Button variant="pro-outline" onClick={() => navigate(-1)} className="p-2 h-auto">
-                        <ChevronLeft size={20} />
-                    </Button>
-                    <div>
-                        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                            <User size={24} className="text-blue-600" />
-                            {userId}'s Profile
-                        </h2>
-                        <p className="text-slate-500">Player Overview</p>
+                <div className="flex items-center justify-between border-b border-slate-200 pb-6">
+                    <div className="flex items-center gap-4">
+                        <Button variant="pro-outline" onClick={() => navigate(-1)} className="p-2 h-auto">
+                            <ChevronLeft size={20} />
+                        </Button>
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm">
+                                <img 
+                                    src={profile.stats.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
+                                    alt={userId} 
+                                    className="w-full h-full object-cover"
+                                    referrerPolicy="no-referrer"
+                                />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                                    {userId}'s Profile
+                                    {profile.isAdmin && <ShieldCheck size={18} className="text-red-500" />}
+                                    {profile.isVerifiedTeacher && <GraduationCap size={18} className="text-fun-blue" />}
+                                    {profile.isPremium && <Crown size={18} className="text-amber-500" />}
+                                </h2>
+                                <p className="text-slate-500 font-medium">{profile.stats.identityTitle || 'Explorer'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Joined</p>
+                            <p className="text-sm font-bold text-slate-700">{new Date().toLocaleDateString()}</p>
+                        </div>
                     </div>
                 </div>
 
@@ -106,15 +126,33 @@ const UserProfileView: React.FC = () => {
     // Kids View
     return (
         <div className="max-w-4xl mx-auto space-y-10 animate-fade-in pb-20">
-            <div className="flex items-center gap-4">
-                <Button variant="secondary" onClick={() => navigate(-1)} className="rounded-2xl">
-                    <ChevronLeft size={24} /> Back
-                </Button>
-                <div className="bg-white px-6 py-3 rounded-3xl border-4 border-slate-100 shadow-sm">
-                    <h2 className="text-3xl font-black text-slate-800 flex items-center gap-3">
-                        <span className="text-4xl">{profile.mode === 'kids' ? '😎' : '👨‍💼'}</span>
-                        {userId}
-                    </h2>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Button variant="secondary" onClick={() => navigate(-1)} className="rounded-2xl">
+                        <ChevronLeft size={24} /> Back
+                    </Button>
+                    <div className="bg-white px-6 py-3 rounded-3xl border-4 border-slate-100 shadow-sm flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-fun-blue/10 border-2 border-fun-blue/20 overflow-hidden shadow-inner">
+                            <img 
+                                src={profile.stats.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
+                                alt={userId} 
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                            />
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-black text-slate-800 flex items-center gap-2">
+                                {userId}
+                                {profile.isAdmin && <ShieldCheck size={24} className="text-red-500 fill-red-500" />}
+                                {profile.isVerifiedTeacher && <GraduationCap size={24} className="text-fun-blue fill-fun-blue" />}
+                                {profile.isPremium && <Crown size={24} className="text-amber-500 fill-amber-500 animate-pulse" />}
+                            </h2>
+                            <p className="text-fun-pink font-black text-sm uppercase tracking-widest">{profile.stats.identityTitle || 'Explorer'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="hidden md:block bg-fun-blue text-white px-6 py-3 rounded-3xl font-black shadow-lg border-b-4 border-blue-700">
+                    #{profile.stats.level} LEVEL
                 </div>
             </div>
 

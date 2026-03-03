@@ -6,7 +6,7 @@ import { useGamification } from '../context/GamificationContext';
 import { SUPPORTED_LANGUAGES } from '../constants';
 
 const Sidebar: React.FC = () => {
-  const { mode, setMode, userId, logout, isAdmin, setIsContactOpen, preferredLanguage, updateProfile } = useGamification();
+  const { mode, setMode, userId, logout, isAdmin, setIsContactOpen, preferredLanguage, updateProfile, stats, isVerifiedTeacher, isPremium } = useGamification();
   const isKids = mode === 'kids';
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
 
@@ -19,6 +19,7 @@ const Sidebar: React.FC = () => {
     { name: isKids ? 'Speak Clear' : 'Pronunciation', path: '/pronunciation', icon: <Volume2 size={isKids ? 24 : 20} />, color: 'text-fun-blue' },
     { name: isKids ? 'Word Rush' : 'Vocabulary', path: '/vocab', icon: isKids ? <Zap size={24} /> : <BookOpen size={20} />, color: 'text-fun-yellow' },
     { name: isKids ? 'Live Race' : 'Competitive Race', path: '/race', icon: <Flag size={isKids ? 24 : 20} />, color: 'text-red-500' },
+    { name: isKids ? 'Teachers' : 'Our Teachers', path: '/teachers', icon: <User size={isKids ? 24 : 20} />, color: 'text-fun-blue' },
     { name: isKids ? 'Grammar Coach' : 'AI Coach', path: '/grammar', icon: <GraduationCap size={isKids ? 24 : 20} />, color: 'text-fun-purple' },
     { name: isKids ? 'Scramble' : 'Grammar Lessons', path: isKids ? '/game/scramble' : '/grammar-lessons', icon: isKids ? <Brain size={24} /> : <PenTool size={20} />, color: 'text-fun-purple' },
     { name: isKids ? 'Trading Post' : 'Exchange', path: '/trading', icon: isKids ? <Store size={24} /> : <ArrowRightLeft size={20} />, color: 'text-teal-500' },
@@ -105,6 +106,18 @@ const Sidebar: React.FC = () => {
                   Admin Panel
                </NavLink>
              )}
+
+             {(isVerifiedTeacher || isAdmin) && (
+               <NavLink
+                 to="/teacher-panel"
+                 className={({ isActive }) => 
+                   `flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive ? 'bg-fun-blue/10 text-fun-blue' : 'text-fun-blue hover:bg-fun-blue/10'}`
+                 }
+               >
+                  <GraduationCap size={20} className="mr-3" />
+                  Teacher Panel
+               </NavLink>
+             )}
           </div>
         </nav>
 
@@ -158,10 +171,22 @@ const Sidebar: React.FC = () => {
           
           <div className="flex items-center justify-between px-2">
              <div className="flex items-center gap-2 overflow-hidden">
-                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white border border-slate-600">
-                    <User size={14} />
+                <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600 overflow-hidden relative">
+                    <img 
+                      src={stats.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
+                      alt="User" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
                 </div>
-                <span className="text-xs font-medium text-slate-400 truncate max-w-[80px]">{userId}</span>
+                <div className="flex flex-col overflow-hidden">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-medium text-slate-400 truncate max-w-[80px]">{userId}</span>
+                    {isAdmin && <ShieldCheck size={10} className="text-red-400" />}
+                    {isVerifiedTeacher && <GraduationCap size={10} className="text-fun-blue" />}
+                    {isPremium && <Crown size={10} className="text-amber-400" />}
+                  </div>
+                </div>
              </div>
              <button onClick={logout} className="text-slate-500 hover:text-red-400 transition-colors" title="Logout">
                 <LogOut size={16} />
@@ -261,6 +286,24 @@ const Sidebar: React.FC = () => {
               ADMIN ZONE
           </NavLink>
         )}
+
+        {(isVerifiedTeacher || isAdmin) && (
+           <NavLink
+              to="/teacher-panel"
+              className={({ isActive }) =>
+                `flex items-center px-6 py-4 transition-all duration-200 group text-lg font-black rounded-3xl border-4 ${
+                  isActive 
+                    ? 'bg-fun-blue/10 text-fun-blue border-fun-blue shadow-sm' 
+                    : 'text-fun-blue border-fun-blue/20 bg-fun-blue/5 hover:bg-fun-blue/10 hover:scale-105'
+                }`
+              }
+            >
+              <span className="mr-4">
+                <GraduationCap size={24} />
+              </span>
+              TEACHER PANEL
+          </NavLink>
+        )}
       </nav>
 
       <div className="p-8 border-t-4 border-slate-50 space-y-4">
@@ -313,10 +356,22 @@ const Sidebar: React.FC = () => {
 
         <div className="flex items-center justify-between px-4">
            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-black text-slate-500 text-xs">
-                 <User size={14} />
+              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden relative">
+                 <img 
+                   src={stats.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
+                   alt="User" 
+                   className="w-full h-full object-cover"
+                   referrerPolicy="no-referrer"
+                 />
               </div>
-              <span className="font-black text-slate-400 text-xs truncate max-w-[100px]">{userId}</span>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1">
+                  <span className="font-black text-slate-400 text-xs truncate max-w-[100px]">{userId}</span>
+                  {isAdmin && <ShieldCheck size={10} className="text-red-400" />}
+                  {isVerifiedTeacher && <GraduationCap size={10} className="text-fun-blue" />}
+                  {isPremium && <Crown size={10} className="text-amber-400" />}
+                </div>
+              </div>
            </div>
            <button onClick={logout} className="text-slate-400 hover:text-red-400 font-bold text-xs flex items-center gap-1 transition-colors">
               <LogOut size={14} /> Logout

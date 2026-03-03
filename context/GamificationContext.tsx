@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { UserStats, Badge, LeaderboardEntry, AppMode, Quest, TradeOffer, GamificationContextType, UserProfile, UserTrade, ContactRequest, AppNotification } from '../types';
+import { UserStats, Badge, LeaderboardEntry, AppMode, Quest, TradeOffer, GamificationContextType, UserProfile, UserTrade, ContactRequest, AppNotification, TeacherApplication, TeacherHelpRequest } from '../types';
 import { Star, Zap, Award, Gift, Sparkles, ArrowRightLeft, AlertTriangle } from 'lucide-react';
 import { db } from '../services/db';
 import { supabase } from '../services/supabaseClient';
@@ -70,6 +70,12 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   // UI State
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [appNotifications, setAppNotifications] = useState<AppNotification[]>([]);
+
+  // Teacher State
+  const [isVerifiedTeacher, setIsVerifiedTeacher] = useState(false);
+  const [teacherStatus, setTeacherStatus] = useState<'none' | 'pending' | 'verified'>('none');
+  const [teacherApplications, setTeacherApplications] = useState<TeacherApplication[]>([]);
+  const [helpRequests, setHelpRequests] = useState<TeacherHelpRequest[]>([]);
 
   // --- IAP Initialization ---
   useEffect(() => {
@@ -229,6 +235,9 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             setCefrLevel(profile.cefrLevel || 'A1');
             setPreferredLanguage(profile.preferredLanguage || 'Turkish');
             setEmail(profile.email || '');
+            setIsVerifiedTeacher(profile.isVerifiedTeacher || false);
+            setTeacherStatus(profile.teacherStatus || 'none');
+            if (profile.isAdmin) setIsAdmin(true);
             setIsInitialized(true);
           } else {
             // Edge case: ID in local storage but not in DB anymore
@@ -339,9 +348,25 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     fetchLeaderboard();
     fetchNotifications();
-    const interval = setInterval(fetchLeaderboard, 60000); // Refresh every minute
+
+    const fetchTeacherData = async () => {
+      if (userId) {
+        if (isAdmin) {
+          const apps = await db.getTeacherApplications();
+          setTeacherApplications(apps);
+        }
+        const requests = await db.getHelpRequests();
+        setHelpRequests(requests);
+      }
+    };
+    fetchTeacherData();
+
+    const interval = setInterval(() => {
+      fetchLeaderboard();
+      fetchTeacherData();
+    }, 60000); // Refresh every minute
     return () => clearInterval(interval);
-  }, [userId]);
+  }, [userId, isAdmin]);
 
   // Real-time Subscription for Global Notifications
   useEffect(() => {
@@ -409,7 +434,9 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
               focusArea,
               usageContext,
               cefrLevel,
-              preferredLanguage
+              preferredLanguage,
+              isVerifiedTeacher,
+              teacherStatus
           });
       };
       
@@ -851,6 +878,101 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return success;
   };
 
+  // Teacher Functions
+  const applyForTeacher = async (specialty: string, experience: string): Promise<{ success: boolean; msg: string }> => {
+    if (!userId) return { success: false, msg: 'Not logged in' };
+    
+    const application: TeacherApplication = {
+      id: `app_${Date.now()}`,
+      userId,
+      username: userId,
+      specialty,
+      experience,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    
+    const success = await db.applyForTeacher(userId, userId, specialty, experience);
+    if (success) {
+      setTeacherStatus('pending');
+      return { success: true, msg: 'Application submitted successfully!' };
+    }
+    return { success: false, msg: 'Failed to submit application.' };
+  };
+
+  const refreshTeacherApplications = async () => {
+    if (isAdmin) {
+      const apps = await db.getTeacherApplications();
+      setTeacherApplications(apps);
+    }
+  };
+
+  const verifyTeacher = async (applicationId: string, status: 'approved' | 'rejected'): Promise<boolean> => {
+    if (!isAdmin) return false;
+    
+    const success = await db.updateTeacherApplicationStatus(applicationId, status);
+    if (success) {
+      // Update the user's profile if approved
+      const app = teacherApplications.find(a => a.id === applicationId);
+      if (app && status === 'approved') {
+        const userProfile = await db.getUser(app.userId);
+        if (userProfile) {
+          await db.saveUser(app.userId, {
+            ...userProfile,
+            isVerifiedTeacher: true,
+            teacherStatus: 'verified'
+          });
+        }
+      }
+      
+      // Refresh applications
+      const apps = await db.getTeacherApplications();
+      setTeacherApplications(apps);
+      return true;
+    }
+    return false;
+  };
+
+  const requestHelp = async (topic: string, message: string): Promise<boolean> => {
+    if (!userId) return false;
+    
+    const request: TeacherHelpRequest = {
+      id: `help_${Date.now()}`,
+      studentId: userId,
+      studentName: userId,
+      studentAvatar: stats.avatar || '',
+      topic,
+      message,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    
+    const success = await db.createHelpRequest(userId, userId, topic, message);
+    if (success) {
+      const requests = await db.getHelpRequests();
+      setHelpRequests(requests);
+      setNotification({ text: "Help request sent to teachers!", type: 'reward' });
+      setTimeout(() => setNotification(null), 3000);
+      return true;
+    }
+    return false;
+  };
+
+  const answerHelpRequest = async (requestId: string, answer: string): Promise<boolean> => {
+    if (!isVerifiedTeacher && !isAdmin) return false;
+    if (!userId) return false;
+    
+    const success = await db.answerHelpRequest(requestId, userId, userId, answer);
+    if (success) {
+      const requests = await db.getHelpRequests();
+      setHelpRequests(requests);
+      setNotification({ text: "Help request answered!", type: 'reward' });
+      setTimeout(() => setNotification(null), 3000);
+      return true;
+    }
+    return false;
+  };
+
   if (userId && isLoading) {
       return (
           <div className="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center">
@@ -885,7 +1007,8 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       showLevelUp, closeLevelUp: () => setShowLevelUp(false),
       isContactOpen, setIsContactOpen, sendAdminMessage, replyToRequest,
       focusArea, usageContext, cefrLevel, preferredLanguage, email, updateProfile,
-      requestPasswordReset, verifyResetCode, changeUsername, refreshTradeOffers
+      requestPasswordReset, verifyResetCode, changeUsername, refreshTradeOffers,
+      isVerifiedTeacher, teacherStatus, applyForTeacher, verifyTeacher, teacherApplications, refreshTeacherApplications, helpRequests, requestHelp, answerHelpRequest
     }}>
       {children}
       

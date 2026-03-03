@@ -27,6 +27,8 @@ import StoryMode from './pages/StoryMode';
 import PronunciationPractice from './pages/PronunciationPractice';
 import Notifications from './pages/Notifications';
 import RaceMode from './pages/RaceMode';
+import Teachers from './pages/Teachers';
+import TeacherPanel from './pages/TeacherPanel';
 import { GamificationProvider, useGamification } from './context/GamificationContext';
 
 // Auth Wrapper Component
@@ -73,6 +75,8 @@ const AppRoutes: React.FC = () => {
       <Route path="/settings" element={<AuthWrapper><AccountSettings /></AuthWrapper>} />
       <Route path="/notifications" element={<AuthWrapper><Notifications /></AuthWrapper>} />
       <Route path="/admin" element={<AuthWrapper><AdminPanel /></AuthWrapper>} />
+      <Route path="/teachers" element={<AuthWrapper><Teachers /></AuthWrapper>} />
+      <Route path="/teacher-panel" element={<AuthWrapper><TeacherPanel /></AuthWrapper>} />
       
       {/* Game Routes */}
       <Route path="/game/galaxy" element={<AuthWrapper><GrammarGalaxy /></AuthWrapper>} />

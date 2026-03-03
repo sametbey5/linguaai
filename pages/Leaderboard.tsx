@@ -50,8 +50,13 @@ const Leaderboard: React.FC = () => {
                 {getRankIcon(index)}
               </div>
               
-              <div className={`w-16 h-16 rounded-2xl ${user.color || 'bg-slate-100'} text-4xl flex items-center justify-center mr-6 border-4 border-white shadow-sm ring-2 ring-slate-100 group-hover:scale-110 transition-transform`}>
-                {user.avatar}
+              <div className={`w-16 h-16 rounded-2xl ${user.color || 'bg-slate-100'} flex items-center justify-center mr-6 border-4 border-white shadow-sm ring-2 ring-slate-100 group-hover:scale-110 transition-transform overflow-hidden`}>
+                <img 
+                  src={user.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
+                  alt={user.name} 
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
               </div>
 
               <div className="flex-1">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CheckCircle, ChevronRight, ArrowLeft, Award, Sparkles, Lock, Star, Globe } from 'lucide-react';
+import { BookOpen, CheckCircle, ChevronRight, ArrowLeft, Award, Sparkles, Lock, Star, Globe, LifeBuoy } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import Button from '../components/Button';
 import { useGamification } from '../context/GamificationContext';
 import Confetti from '../components/Confetti';
@@ -36,7 +37,9 @@ const GrammarLessons: React.FC = () => {
   };
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [currentExplanationPartIndex, setCurrentExplanationPartIndex] = useState(0);
   const [phase, setPhase] = useState<'list' | 'explanation' | 'quiz' | 'completed'>('list');
+  const [isHelpRequested, setIsHelpRequested] = useState(false);
   
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
@@ -46,8 +49,10 @@ const GrammarLessons: React.FC = () => {
     setSelectedLesson(lesson);
     setPhase('explanation');
     setCurrentExerciseIndex(0);
+    setCurrentExplanationPartIndex(0);
     setFeedback(null);
     setUserAnswer('');
+    setIsHelpRequested(false);
   };
 
   const handleStartQuiz = () => {
@@ -244,39 +249,96 @@ const GrammarLessons: React.FC = () => {
 
   // --- RENDER: EXPLANATION ---
   if (phase === 'explanation' && selectedLesson) {
+    const hasParts = selectedLesson.explanationParts && selectedLesson.explanationParts.length > 0;
+    const currentPart = hasParts ? selectedLesson.explanationParts![currentExplanationPartIndex] : selectedLesson.explanation;
+    const totalParts = hasParts ? selectedLesson.explanationParts!.length : 1;
+    
+    // Translation handling for parts
+    let currentTranslationPart = null;
+    if (preferredLanguage && preferredLanguage !== 'English' && selectedLesson.translations && selectedLesson.translations[preferredLanguage]) {
+        const trans = selectedLesson.translations[preferredLanguage];
+        if (trans.explanationParts && trans.explanationParts.length > currentExplanationPartIndex) {
+            currentTranslationPart = trans.explanationParts[currentExplanationPartIndex];
+        } else if (currentExplanationPartIndex === 0) {
+            currentTranslationPart = trans.explanation;
+        }
+    }
+
+    const handleNextPart = () => {
+        if (hasParts && currentExplanationPartIndex < selectedLesson.explanationParts!.length - 1) {
+            setCurrentExplanationPartIndex(prev => prev + 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            handleStartQuiz();
+        }
+    };
+
+    const handlePrevPart = () => {
+        if (currentExplanationPartIndex > 0) {
+            setCurrentExplanationPartIndex(prev => prev - 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
     return (
       <div className="max-w-3xl mx-auto animate-fade-in pb-20">
-        <button onClick={handleBackToList} className="flex items-center text-slate-400 hover:text-slate-600 font-bold mb-6 transition-colors">
-          <ArrowLeft size={20} className="mr-2" /> Back {preferredLanguage && preferredLanguage !== 'English' && <span className="ml-1 opacity-70">({t('back')})</span>}
-        </button>
+        <div className="flex items-center justify-between mb-6">
+            <button onClick={handleBackToList} className="flex items-center text-slate-400 hover:text-slate-600 font-bold transition-colors">
+                <ArrowLeft size={20} className="mr-2" /> Back {preferredLanguage && preferredLanguage !== 'English' && <span className="ml-1 opacity-70">({t('back')})</span>}
+            </button>
+            {hasParts && (
+                <div className="text-slate-400 font-black text-sm uppercase tracking-widest">
+                    Part {currentExplanationPartIndex + 1} of {totalParts}
+                </div>
+            )}
+        </div>
         
-        <div className="bg-white p-8 md:p-12 rounded-[3rem] border-4 border-slate-100 shadow-xl">
+        <div className="bg-white p-8 md:p-12 rounded-[3rem] border-4 border-slate-100 shadow-xl relative overflow-hidden">
+          {/* Progress Bar for Parts */}
+          {hasParts && (
+              <div className="absolute top-0 left-0 w-full h-2 bg-slate-100">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${((currentExplanationPartIndex + 1) / totalParts) * 100}%` }}
+                    className="h-full bg-fun-blue"
+                  />
+              </div>
+          )}
+
           <div className={`inline-block ${LEVELS.find(l => l.id === selectedLesson.level)?.color} text-white px-4 py-1 rounded-full font-black text-sm mb-4 uppercase tracking-widest shadow-sm`}>
             {selectedLesson.level} • {selectedLesson.topic}
           </div>
           <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-8">{selectedLesson.title}</h2>
           
-          <div className="prose prose-lg max-w-none">
-            {selectedLesson.explanation}
+          <div className="prose prose-lg max-w-none min-h-[200px] animate-slide-up">
+            {currentPart}
           </div>
           
-          {preferredLanguage && preferredLanguage !== 'English' && selectedLesson.translations && selectedLesson.translations[preferredLanguage] && (
+          {currentTranslationPart && (
             <div className="mt-8 border-t-2 border-slate-100 pt-8">
                 <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 animate-fade-in">
                     <h4 className="font-bold text-fun-blue mb-4 flex items-center">
                         <Globe size={20} className="mr-2" /> 
-                        {t('support_language')}: {selectedLesson.translations[preferredLanguage].title}
+                        {t('support_language')}: {selectedLesson.translations![preferredLanguage!].title}
                     </h4>
                     <div className="prose prose-blue max-w-none whitespace-pre-wrap text-slate-700">
-                        {selectedLesson.translations[preferredLanguage].explanation}
+                        {currentTranslationPart}
                     </div>
                 </div>
             </div>
           )}
 
-          <div className="mt-12 flex justify-end">
-            <Button onClick={handleStartQuiz} className="px-8 py-4 text-lg" icon={<Sparkles size={24} />}>
-              Start Practice {preferredLanguage && preferredLanguage !== 'English' && <span className="ml-1 opacity-70">({t('start_practice')})</span>}
+          <div className="mt-12 flex justify-between items-center">
+            {currentExplanationPartIndex > 0 ? (
+                <Button onClick={handlePrevPart} variant="secondary" className="px-6 py-4">
+                    Previous
+                </Button>
+            ) : <div />}
+
+            <Button onClick={handleNextPart} className="px-8 py-4 text-lg" icon={currentExplanationPartIndex === totalParts - 1 ? <Sparkles size={24} /> : <ChevronRight size={24} />}>
+              {currentExplanationPartIndex === totalParts - 1 
+                ? `Start Practice ${preferredLanguage && preferredLanguage !== 'English' ? `(${t('start_practice')})` : ''}`
+                : "Next Part"}
             </Button>
           </div>
         </div>
@@ -292,13 +354,48 @@ const GrammarLessons: React.FC = () => {
     return (
       <div className="max-w-3xl mx-auto animate-fade-in pb-20">
         <div className="flex items-center justify-between mb-8">
-          <button onClick={handleBackToList} className="flex items-center text-slate-400 hover:text-slate-600 font-bold transition-colors">
-            <ArrowLeft size={20} className="mr-2" /> Quit
-          </button>
+          <div className="flex items-center gap-4">
+            <button onClick={handleBackToList} className="flex items-center text-slate-400 hover:text-slate-600 font-bold transition-colors">
+              <ArrowLeft size={20} className="mr-2" /> Quit
+            </button>
+            <button 
+              onClick={() => setIsHelpRequested(true)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-black transition-all ${
+                isHelpRequested 
+                  ? 'bg-fun-green text-white shadow-md' 
+                  : 'bg-white border-2 border-slate-100 text-slate-400 hover:border-fun-blue hover:text-fun-blue'
+              }`}
+            >
+              <LifeBuoy size={18} />
+              {isHelpRequested ? 'Help Requested!' : 'Request Help'}
+            </button>
+          </div>
           <div className="text-slate-500 font-bold">
             Question {currentExerciseIndex + 1} of {selectedLesson.exercises.length}
           </div>
         </div>
+
+        {isHelpRequested && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 bg-fun-blue/10 border-2 border-fun-blue/20 rounded-2xl flex items-center gap-4"
+          >
+            <div className="w-12 h-12 bg-fun-blue text-white rounded-full flex items-center justify-center shadow-md">
+              <Star size={24} />
+            </div>
+            <div>
+              <p className="font-black text-slate-800">Hang tight! 🚀</p>
+              <p className="text-sm text-slate-600 font-medium">A teacher has been notified and will assist you shortly.</p>
+            </div>
+            <button 
+              onClick={() => setIsHelpRequested(false)}
+              className="ml-auto text-slate-400 hover:text-slate-600 font-bold text-xs"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
 
         {/* Progress Bar */}
         <div className="w-full bg-slate-200 h-3 rounded-full mb-8 overflow-hidden">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGamification } from '../context/GamificationContext';
 import Button from '../components/Button';
-import { ShieldCheck, Award, User, RefreshCw, CheckCircle, AlertTriangle, MessageSquare, Mail, Reply, Send, Bell, Plus, Trash2, Info, Sparkles, Gift, Calendar } from 'lucide-react';
+import { ShieldCheck, Award, User, RefreshCw, CheckCircle, AlertTriangle, MessageSquare, Mail, Reply, Send, Bell, Plus, Trash2, Info, Sparkles, Gift, Calendar, GraduationCap } from 'lucide-react';
 import { db } from '../services/db';
 import { Badge, ContactRequest, AppNotification } from '../types';
 
@@ -100,10 +100,10 @@ const MessageItem: React.FC<MessageItemProps> = ({ msg, onReply }) => {
 };
 
 const AdminPanel: React.FC = () => {
-  const { isAdmin, mode, appNotifications, addAppNotification, deleteAppNotification } = useGamification();
+  const { isAdmin, mode, appNotifications, addAppNotification, deleteAppNotification, teacherApplications, verifyTeacher, refreshTeacherApplications } = useGamification();
   const isKids = mode === 'kids';
 
-  const [activeTab, setActiveTab] = useState<'badges' | 'messages' | 'notifications'>('badges');
+  const [activeTab, setActiveTab] = useState<'badges' | 'messages' | 'notifications' | 'teachers'>('badges');
   
   // Badge State
   const [targetUser, setTargetUser] = useState('');
@@ -131,6 +131,9 @@ const AdminPanel: React.FC = () => {
   useEffect(() => {
     if (isAdmin && activeTab === 'messages') {
         fetchMessages();
+    }
+    if (isAdmin && activeTab === 'teachers') {
+        refreshTeacherApplications();
     }
   }, [isAdmin, activeTab]);
 
@@ -218,6 +221,12 @@ const AdminPanel: React.FC = () => {
                   className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'notifications' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
                >
                    Notifications
+               </button>
+               <button 
+                  onClick={() => setActiveTab('teachers')}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'teachers' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
+               >
+                   Teachers
                </button>
            </div>
        </div>
@@ -497,6 +506,77 @@ const AdminPanel: React.FC = () => {
                         )}
                     </div>
                 </div>
+            </div>
+        )}
+
+        {activeTab === 'teachers' && (
+            <div className="bg-white p-8 rounded-[2rem] shadow-xl border-4 border-slate-100 min-h-[400px]">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-black text-xl text-slate-700 flex items-center gap-2">
+                        <GraduationCap className="text-fun-blue" /> Teacher Applications
+                    </h3>
+                    <button 
+                        onClick={() => refreshTeacherApplications()}
+                        className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-fun-blue"
+                        title="Refresh Applications"
+                    >
+                        <RefreshCw size={20} />
+                    </button>
+                </div>
+
+                {teacherApplications.length === 0 ? (
+                    <div className="text-center py-20 text-slate-400 font-bold">
+                        <User size={48} className="mx-auto mb-4 opacity-50" />
+                        No applications found.
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {teacherApplications.map((app) => (
+                            <div key={app.id} className={`p-6 rounded-2xl border-2 ${app.status === 'approved' ? 'border-green-100 bg-green-50/30' : app.status === 'rejected' ? 'border-red-100 bg-red-50/30' : 'border-slate-100 bg-slate-50'}`}>
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h4 className="font-black text-slate-800 text-lg">{app.username}</h4>
+                                        <p className="text-xs font-bold text-fun-blue uppercase tracking-widest">{app.specialty}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                                            app.status === 'approved' ? 'bg-green-100 text-green-600' :
+                                            app.status === 'rejected' ? 'bg-red-100 text-red-600' :
+                                            'bg-yellow-100 text-yellow-600'
+                                        }`}>
+                                            {app.status}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-white/50 p-4 rounded-xl mb-4">
+                                    <h5 className="text-[10px] font-black text-slate-400 uppercase mb-1">Experience:</h5>
+                                    <p className="text-sm text-slate-600 font-medium">{app.experience}</p>
+                                </div>
+
+                                {app.status === 'pending' && (
+                                    <div className="flex gap-3 justify-end">
+                                        <Button 
+                                            variant="secondary" 
+                                            onClick={() => verifyTeacher(app.id, 'rejected')}
+                                            className="text-xs py-2 border-red-200 text-red-500 hover:bg-red-50"
+                                        >
+                                            Reject
+                                        </Button>
+                                        <Button 
+                                            variant="success" 
+                                            onClick={() => verifyTeacher(app.id, 'approved')}
+                                            className="text-xs py-2"
+                                            icon={<CheckCircle size={14}/>}
+                                        >
+                                            Approve Teacher
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         )}
      </div>

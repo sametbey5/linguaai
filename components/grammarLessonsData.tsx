@@ -14,6 +14,7 @@ export type Level = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 export type LessonTranslation = {
   title: string;
   explanation: React.ReactNode;
+  explanationParts?: React.ReactNode[];
 };
 
 export type Lesson = {
@@ -22,6 +23,7 @@ export type Lesson = {
   title: string;
   topic: string;
   explanation: React.ReactNode;
+  explanationParts?: React.ReactNode[];
   rawExplanation?: string;
   exercises: Exercise[];
   translations?: Record<string, LessonTranslation>;
@@ -96,27 +98,270 @@ const createLesson = (
 
 export const LESSONS: Lesson[] = [
   // --- A1 Beginner ---
-  createLesson('a1-1', 'A1', 'Present Simple (To Be)', 'Verbs', 'Use "am", "is", or "are".', 'I _____ happy.', 'am', ['am', 'is', 'are'], {
-    'Turkish': { title: 'Geniş Zaman (Olmak)', desc: '"am", "is" veya "are" kullanın.', rule: 'Özneye göre fiil çekimini unutmayın.' },
-    'Spanish': { title: 'Presente Simple (Ser/Estar)', desc: 'Usa "am", "is", o "are".', rule: 'Recuerda la conjugación según el sujeto.' },
-    'French': { title: 'Présent Simple (Être)', desc: 'Utilisez "am", "is" ou "are".', rule: 'N\'oubliez pas la conjugaison selon le sujet.' },
-    'German': { title: 'Präsens (Sein)', desc: 'Verwenden Sie "am", "is" oder "are".', rule: 'Denken Sie an die Konjugation je nach Subjekt.' },
-    'Italian': { title: 'Presente Semplice (Essere)', desc: 'Usa "am", "is" o "are".', rule: 'Ricorda la coniugazione in base al soggetto.' },
-    'Portuguese': { title: 'Presente Simples (Ser/Estar)', desc: 'Use "am", "is" ou "are".', rule: 'Lembre-se da conjugação de acordo com o sujeito.' },
-    'Russian': { title: 'Настоящее простое время (Быть)', desc: 'Используйте "am", "is" или "are".', rule: 'Помните спряжение в зависимости от подлежащего.' },
-    'Chinese': { title: '一般现在时 (To Be)', desc: '使用 "am", "is" 或 "are".', rule: '记住根据主语变位。' },
-    'Japanese': { title: '現在形 (Be動詞)', desc: '"am", "is", "are" を使います。', rule: '主語に応じた活用を覚えてください。' },
-    'Korean': { title: '현재 시제 (Be 동사)', desc: '"am", "is", "are"를 사용하세요.', rule: '주어에 따른 활용을 기억하세요.' },
-    'Arabic': { title: 'المضارع البسيط (يكون)', desc: 'استخدم "am" أو "is" أو "are".', rule: 'تذكر التصريف حسب الفاعل.' },
-    'Hindi': { title: 'सामान्य वर्तमान (To Be)', desc: '"am", "is", या "are" का प्रयोग करें।', rule: 'कर्ता के अनुसार क्रिया रूप याद रखें।' }
-  }),
-  createLesson('a1-2', 'A1', 'Present Simple (Verbs)', 'Verbs', 'Add -s for He/She/It.', 'She _____ tennis.', 'plays', ['play', 'plays', 'playing'], {
-    'Turkish': { title: 'Geniş Zaman (Fiiller)', desc: 'He/She/It için -s takısı ekleyin.', rule: 'Üçüncü tekil şahıslarda fiile -s eklenir.' }
-  }),
-  createLesson('a1-3', 'A1', 'Subject Pronouns', 'Pronouns', 'I, You, He, She, It, We, They.', '_____ is my friend.', 'He', ['He', 'Him', 'His'], {
-    'Turkish': { title: 'Özne Zamirleri', desc: 'Ben, Sen, O, Biz, Onlar.', rule: 'Cümlenin başında özne olarak kullanılır.' }
-  }),
-  createLesson('a1-4', 'A1', 'Object Pronouns', 'Pronouns', 'Me, You, Him, Her, It, Us, Them.', 'Listen to _____.', 'me', ['me', 'I', 'my']),
+  {
+    id: 'a1-1',
+    level: 'A1',
+    title: 'Present Simple (To Be)',
+    topic: 'Verbs',
+    explanation: (
+      <div className="space-y-4">
+        <p>The verb "to be" is the most important verb in English. We use it to describe people, places, and things.</p>
+        <p>In the present simple, it has three forms: <strong>am</strong>, <strong>is</strong>, and <strong>are</strong>.</p>
+      </div>
+    ),
+    explanationParts: [
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 1: The Basics</h4>
+        <p className="text-lg text-slate-600">The verb "to be" changes depending on the subject (the person or thing doing the action).</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-blue-50 p-4 rounded-2xl border-2 border-blue-100">
+            <span className="font-black text-fun-blue">I</span>
+            <span className="mx-2">→</span>
+            <span className="font-black text-slate-800">am</span>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-2xl border-2 border-purple-100">
+            <span className="font-black text-fun-purple">You / We / They</span>
+            <span className="mx-2">→</span>
+            <span className="font-black text-slate-800">are</span>
+          </div>
+          <div className="bg-green-50 p-4 rounded-2xl border-2 border-green-100 col-span-2">
+            <span className="font-black text-fun-green">He / She / It</span>
+            <span className="mx-2">→</span>
+            <span className="font-black text-slate-800">is</span>
+          </div>
+        </div>
+      </div>,
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 2: Positive Sentences</h4>
+        <p className="text-lg text-slate-600">We use these forms to make simple statements about ourselves and others.</p>
+        <ul className="space-y-3">
+          <li className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+            <span className="w-8 h-8 bg-fun-blue/10 text-fun-blue rounded-full flex items-center justify-center font-bold">1</span>
+            <span><strong>I am</strong> a student.</span>
+          </li>
+          <li className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+            <span className="w-8 h-8 bg-fun-blue/10 text-fun-blue rounded-full flex items-center justify-center font-bold">2</span>
+            <span><strong>He is</strong> happy today.</span>
+          </li>
+          <li className="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+            <span className="w-8 h-8 bg-fun-blue/10 text-fun-blue rounded-full flex items-center justify-center font-bold">3</span>
+            <span><strong>They are</strong> at school.</span>
+          </li>
+        </ul>
+      </div>,
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 3: Negative Sentences</h4>
+        <p className="text-lg text-slate-600">To make a negative sentence, just add <strong>not</strong> after the verb.</p>
+        <div className="bg-slate-800 text-white p-6 rounded-[2rem] space-y-4">
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <span>I am</span>
+            <span className="font-black text-fun-pink">+ not</span>
+          </div>
+          <div className="flex justify-between items-center border-b border-white/10 pb-2">
+            <span>He/She/It is</span>
+            <span className="font-black text-fun-pink">+ not</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span>You/We/They are</span>
+            <span className="font-black text-fun-pink">+ not</span>
+          </div>
+        </div>
+        <p className="italic text-slate-500 text-sm">Example: "I am not hungry." or "They are not here."</p>
+      </div>
+    ],
+    exercises: [
+      { id: 'q1', type: 'multiple-choice', question: 'I _____ happy.', options: ['am', 'is', 'are'], correctAnswer: 'am', explanation: 'Use "am" with "I".' },
+      { id: 'q2', type: 'multiple-choice', question: 'They _____ my friends.', options: ['am', 'is', 'are'], correctAnswer: 'are', explanation: 'Use "are" with "They".' },
+      { id: 'q3', type: 'multiple-choice', question: 'She _____ not at home.', options: ['am', 'is', 'are'], correctAnswer: 'is', explanation: 'Use "is" with "She".' }
+    ],
+    translations: {
+      'Turkish': {
+        title: 'Geniş Zaman (Olmak)',
+        explanation: <div>"am", "is" veya "are" kullanın.</div>,
+        explanationParts: [
+          <div>Temel bilgiler: Özneye göre fiil çekimini unutmayın.</div>,
+          <div>Olumlu cümleler: "I am a student" gibi.</div>,
+          <div>Olumsuz cümleler: "not" ekleyin.</div>
+        ]
+      }
+    }
+  },
+  {
+    id: 'a1-2',
+    level: 'A1',
+    title: 'Present Simple (Verbs)',
+    topic: 'Verbs',
+    explanation: (
+      <div className="space-y-4">
+        <p>The Present Simple is used for habits, routines, and facts.</p>
+        <p>Example: "I drink coffee every morning."</p>
+      </div>
+    ),
+    explanationParts: [
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 1: Most Verbs</h4>
+        <p className="text-lg text-slate-600">For most people (I, You, We, They), we use the base form of the verb.</p>
+        <div className="bg-white p-6 rounded-[2rem] border-4 border-slate-100 shadow-sm">
+          <ul className="space-y-2 font-bold text-slate-700">
+            <li>I <span className="text-fun-blue underline">play</span> football.</li>
+            <li>You <span className="text-fun-blue underline">eat</span> pizza.</li>
+            <li>We <span className="text-fun-blue underline">live</span> in London.</li>
+            <li>They <span className="text-fun-blue underline">speak</span> English.</li>
+          </ul>
+        </div>
+      </div>,
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 2: The "S" Rule</h4>
+        <p className="text-lg text-slate-600">When the subject is <strong>He</strong>, <strong>She</strong>, or <strong>It</strong>, we must add an <strong>-s</strong> to the end of the verb.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-orange-50 p-4 rounded-2xl border-2 border-orange-100">
+            <p className="font-black text-orange-600 mb-1">Normal</p>
+            <p className="text-slate-600">I work</p>
+          </div>
+          <div className="bg-fun-pink/10 p-4 rounded-2xl border-2 border-fun-pink/20">
+            <p className="font-black text-fun-pink mb-1">He/She/It</p>
+            <p className="text-slate-800 font-bold">He work<span className="text-fun-pink text-xl">s</span></p>
+          </div>
+        </div>
+        <p className="text-sm text-slate-500 italic">Example: "She plays tennis every Saturday."</p>
+      </div>,
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 3: Spelling Exceptions</h4>
+        <p className="text-lg text-slate-600">Some verbs need <strong>-es</strong> instead of just <strong>-s</strong>.</p>
+        <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+          <p className="font-bold mb-2">Verbs ending in -ch, -sh, -s, -x, -o:</p>
+          <ul className="grid grid-cols-2 gap-2 text-sm">
+            <li>Watch → Watch<span className="text-fun-blue font-bold">es</span></li>
+            <li>Finish → Finish<span className="text-fun-blue font-bold">es</span></li>
+            <li>Go → Go<span className="text-fun-blue font-bold">es</span></li>
+            <li>Fix → Fix<span className="text-fun-blue font-bold">es</span></li>
+          </ul>
+        </div>
+      </div>
+    ],
+    exercises: [
+      { id: 'q1', type: 'multiple-choice', question: 'She _____ tennis.', options: ['play', 'plays', 'playing'], correctAnswer: 'plays', explanation: 'Add -s for "She".' },
+      { id: 'q2', type: 'multiple-choice', question: 'We _____ to school.', options: ['go', 'goes', 'going'], correctAnswer: 'go', explanation: 'Use base form for "We".' },
+      { id: 'q3', type: 'multiple-choice', question: 'He _____ TV every night.', options: ['watch', 'watches', 'watching'], correctAnswer: 'watches', explanation: 'Add -es for verbs ending in -ch.' }
+    ],
+    translations: {
+      'Turkish': { 
+        title: 'Geniş Zaman (Fiiller)', 
+        explanation: <div>He/She/It için -s takısı ekleyin.</div>,
+        explanationParts: [
+          <div>Çoğu fiil: I, You, We, They için yalın hal kullanılır.</div>,
+          <div>"S" Kuralı: He, She, It için fiile -s eklenir.</div>,
+          <div>Yazım istisnaları: -ch, -sh, -s, -x, -o ile bitenlere -es eklenir.</div>
+        ]
+      }
+    }
+  },
+  {
+    id: 'a1-3',
+    level: 'A1',
+    title: 'Subject Pronouns',
+    topic: 'Pronouns',
+    explanation: (
+      <div className="space-y-4">
+        <p>Subject pronouns are words that replace a noun as the subject of a sentence.</p>
+        <p>Example: "John is happy" → "<strong>He</strong> is happy."</p>
+      </div>
+    ),
+    explanationParts: [
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 1: Singular Pronouns</h4>
+        <p className="text-lg text-slate-600">These pronouns refer to one person or thing.</p>
+        <div className="space-y-3">
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between">
+            <span className="font-black">I</span>
+            <span className="text-slate-500">Myself</span>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between">
+            <span className="font-black">You</span>
+            <span className="text-slate-500">The person I am talking to</span>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex justify-between">
+            <span className="font-black">He / She / It</span>
+            <span className="text-slate-500">A man / A woman / A thing</span>
+          </div>
+        </div>
+      </div>,
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 2: Plural Pronouns</h4>
+        <p className="text-lg text-slate-600">These pronouns refer to more than one person or thing.</p>
+        <div className="space-y-3">
+          <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 flex justify-between">
+            <span className="font-black">We</span>
+            <span className="text-slate-500">Me + others</span>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 flex justify-between">
+            <span className="font-black">You (Plural)</span>
+            <span className="text-slate-500">A group I am talking to</span>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 flex justify-between">
+            <span className="font-black">They</span>
+            <span className="text-slate-500">A group of others</span>
+          </div>
+        </div>
+      </div>
+    ],
+    exercises: [
+      { id: 'q1', type: 'multiple-choice', question: '_____ is my friend.', options: ['He', 'Him', 'His'], correctAnswer: 'He', explanation: 'Use "He" as the subject.' },
+      { id: 'q2', type: 'multiple-choice', question: '_____ are at school.', options: ['They', 'Them', 'Their'], correctAnswer: 'They', explanation: 'Use "They" as the subject.' },
+      { id: 'q3', type: 'multiple-choice', question: '_____ am a teacher.', options: ['I', 'Me', 'My'], correctAnswer: 'I', explanation: 'Use "I" as the subject.' }
+    ],
+    translations: {
+      'Turkish': { 
+        title: 'Özne Zamirleri', 
+        explanation: <div>Ben, Sen, O, Biz, Onlar.</div>,
+        explanationParts: [
+          <div>Tekil Zamirler: I, You, He, She, It.</div>,
+          <div>Çoğul Zamirler: We, You, They.</div>
+        ]
+      }
+    }
+  },
+  {
+    id: 'a1-4',
+    level: 'A1',
+    title: 'Object Pronouns',
+    topic: 'Pronouns',
+    explanation: (
+      <div className="space-y-4">
+        <p>Object pronouns are used after verbs or prepositions.</p>
+        <p>Example: "Look at <strong>me</strong>."</p>
+      </div>
+    ),
+    explanationParts: [
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 1: The List</h4>
+        <p className="text-lg text-slate-600">Every subject pronoun has a matching object pronoun.</p>
+        <div className="grid grid-cols-2 gap-2 text-sm font-bold">
+          <div className="bg-slate-100 p-2 rounded">I → me</div>
+          <div className="bg-slate-100 p-2 rounded">You → you</div>
+          <div className="bg-slate-100 p-2 rounded">He → him</div>
+          <div className="bg-slate-100 p-2 rounded">She → her</div>
+          <div className="bg-slate-100 p-2 rounded">It → it</div>
+          <div className="bg-slate-100 p-2 rounded">We → us</div>
+          <div className="bg-slate-100 p-2 rounded">They → them</div>
+        </div>
+      </div>,
+      <div className="space-y-6">
+        <h4 className="text-2xl font-black text-slate-800">Part 2: Usage</h4>
+        <p className="text-lg text-slate-600">We use them when the person is receiving the action.</p>
+        <div className="bg-green-50 p-6 rounded-[2rem] border-4 border-green-100">
+          <p className="mb-2">"Can you help <span className="text-fun-green font-black underline">me</span>?"</p>
+          <p className="mb-2">"I love <span className="text-fun-green font-black underline">them</span>."</p>
+          <p>"Give it to <span className="text-fun-green font-black underline">us</span>."</p>
+        </div>
+      </div>
+    ],
+    exercises: [
+      { id: 'q1', type: 'multiple-choice', question: 'Listen to _____.', options: ['me', 'I', 'my'], correctAnswer: 'me', explanation: 'Use "me" after the preposition "to".' },
+      { id: 'q2', type: 'multiple-choice', question: 'I see _____.', options: ['him', 'he', 'his'], correctAnswer: 'him', explanation: 'Use "him" after the verb "see".' },
+      { id: 'q3', type: 'multiple-choice', question: 'They like _____.', options: ['us', 'we', 'our'], correctAnswer: 'us', explanation: 'Use "us" after the verb "like".' }
+    ]
+  },
   createLesson('a1-5', 'A1', 'Possessive Adjectives', 'Adjectives', 'My, Your, His, Her, Its, Our, Their.', 'This is _____ car.', 'my', ['my', 'me', 'I']),
   createLesson('a1-6', 'A1', 'Plural Nouns', 'Nouns', 'Add -s or -es.', 'Two _____ are on the table.', 'boxes', ['boxes', 'boxs', 'box']),
   createLesson('a1-7', 'A1', 'Demonstratives', 'Determiners', 'This, That, These, Those.', '_____ is my book here.', 'This', ['This', 'Those', 'These']),

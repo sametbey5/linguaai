@@ -2,20 +2,24 @@
 import React, { useState } from 'react';
 import { useGamification } from '../context/GamificationContext';
 import Button from '../components/Button';
-import { User, Lock, Mail, ShieldCheck, ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User, Lock, Mail, ShieldCheck, ArrowLeft, CheckCircle2, AlertCircle, GraduationCap, Briefcase, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const AccountSettings: React.FC = () => {
-  const { userId, changeUsername, requestPasswordReset, verifyResetCode } = useGamification();
+  const { userId, changeUsername, requestPasswordReset, verifyResetCode, isVerifiedTeacher, teacherStatus, applyForTeacher } = useGamification();
   const navigate = useNavigate();
   
   const [newUsername, setNewUsername] = useState(userId || '');
-  const [authMode, setAuthMode] = useState<'view' | 'change-username' | 'reset-request' | 'reset-verify'>('view');
+  const [authMode, setAuthMode] = useState<'view' | 'change-username' | 'reset-request' | 'reset-verify' | 'apply-teacher'>('view');
   const [email, setEmail] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Teacher Application State
+  const [specialty, setSpecialty] = useState('');
+  const [experience, setExperience] = useState('');
 
   const handleUsernameChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +62,23 @@ const AccountSettings: React.FC = () => {
     setIsSubmitting(true);
     setMessage(null);
     const res = await verifyResetCode(email, resetCode, newPassword);
+    setIsSubmitting(false);
+    
+    if (res.success) {
+      setMessage({ text: res.msg, type: 'success' });
+      setAuthMode('view');
+    } else {
+      setMessage({ text: res.msg, type: 'error' });
+    }
+  };
+
+  const handleTeacherApply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!specialty.trim() || !experience.trim()) return;
+    
+    setIsSubmitting(true);
+    setMessage(null);
+    const res = await applyForTeacher(specialty, experience);
     setIsSubmitting(false);
     
     if (res.success) {
@@ -213,6 +234,93 @@ const AccountSettings: React.FC = () => {
           {authMode === 'view' && (
             <div className="bg-slate-50 p-4 rounded-2xl font-black text-slate-400 text-xl tracking-widest">
               ••••••••••••
+            </div>
+          )}
+        </div>
+
+        {/* Teacher Application Section */}
+        <div className="bg-white p-8 rounded-[2.5rem] border-4 border-slate-100 shadow-xl">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-fun-green/10 rounded-2xl flex items-center justify-center text-fun-green">
+                <GraduationCap size={28} />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-800">Teacher Program</h3>
+                <p className="text-slate-400 font-bold text-sm">Apply to become a verified teacher</p>
+              </div>
+            </div>
+            {authMode === 'view' && !isVerifiedTeacher && teacherStatus === 'none' && (
+              <button 
+                onClick={() => setAuthMode('apply-teacher')}
+                className="text-fun-blue font-black text-sm hover:underline"
+              >
+                Apply Now
+              </button>
+            )}
+          </div>
+
+          {isVerifiedTeacher ? (
+            <div className="bg-green-50 p-6 rounded-2xl border-2 border-green-100 flex items-center gap-4">
+               <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                 <ShieldCheck size={24} />
+               </div>
+               <div>
+                 <p className="font-black text-green-700">Verified Teacher</p>
+                 <p className="text-xs font-bold text-green-600">You have full access to the Teacher Panel!</p>
+               </div>
+               <Button variant="outline" className="ml-auto text-xs" onClick={() => navigate('/teacher-panel')}>Go to Panel</Button>
+            </div>
+          ) : teacherStatus === 'pending' ? (
+            <div className="bg-yellow-50 p-6 rounded-2xl border-2 border-yellow-100 flex items-center gap-4">
+               <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                 <Star size={24} className="animate-pulse" />
+               </div>
+               <div>
+                 <p className="font-black text-yellow-700">Application Pending</p>
+                 <p className="text-xs font-bold text-yellow-600">Our admins are reviewing your application.</p>
+               </div>
+            </div>
+          ) : authMode === 'apply-teacher' ? (
+            <form onSubmit={handleTeacherApply} className="space-y-4 animate-fade-in">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Your Specialty</label>
+                  <div className="relative">
+                    <Star className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    <input 
+                      type="text"
+                      value={specialty}
+                      onChange={(e) => setSpecialty(e.target.value)}
+                      placeholder="e.g. Grammar Expert, IELTS Coach"
+                      className="w-full bg-slate-50 border-4 border-slate-100 rounded-2xl py-4 pl-12 pr-6 text-lg font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Experience & Bio</label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-4 top-6 text-slate-400" size={20} />
+                    <textarea 
+                      value={experience}
+                      onChange={(e) => setExperience(e.target.value)}
+                      placeholder="Tell us about your teaching background..."
+                      className="w-full bg-slate-50 border-4 border-slate-100 rounded-2xl py-4 pl-12 pr-6 text-lg font-bold text-slate-700 outline-none focus:border-fun-blue transition-colors h-32 resize-none"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button type="submit" variant="primary" className="flex-1" isLoading={isSubmitting}>Submit Application</Button>
+                <Button type="button" variant="outline" onClick={() => setAuthMode('view')}>Cancel</Button>
+              </div>
+            </form>
+          ) : (
+            <div className="bg-slate-50 p-4 rounded-2xl font-bold text-slate-500 text-sm italic">
+              Join our community of educators and help students master English!
             </div>
           )}
         </div>

@@ -155,6 +155,9 @@ export interface UserProfile {
   usageContext?: string; // e.g., 'Business', 'Travel'
   cefrLevel?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
   preferredLanguage?: string;
+  isVerifiedTeacher?: boolean;
+  teacherStatus?: 'none' | 'pending' | 'verified';
+  isAdmin?: boolean;
 }
 
 export interface AppNotification {
@@ -164,6 +167,30 @@ export interface AppNotification {
   type: 'info' | 'update' | 'event' | 'reward';
   createdAt: string;
   isGlobal: boolean;
+}
+
+export interface TeacherHelpRequest {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentAvatar: string;
+  topic: string;
+  message: string;
+  status: 'pending' | 'active' | 'resolved';
+  createdAt: string;
+  answeredBy?: string; // Teacher ID
+  answer?: string;
+  answeredAt?: string;
+}
+
+export interface TeacherApplication {
+  id: string;
+  userId: string;
+  username: string;
+  specialty: string;
+  experience: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
 }
 
 // Added Authentication Types
@@ -227,4 +254,15 @@ export interface GamificationContextType {
   closeLevelUp: () => void;
   isLoading: boolean;
   loadError: string | null;
+  
+  // Teacher Functions
+  isVerifiedTeacher: boolean;
+  teacherStatus: 'none' | 'pending' | 'verified';
+  applyForTeacher: (specialty: string, experience: string) => Promise<{ success: boolean; msg: string }>;
+  verifyTeacher: (applicationId: string, status: 'approved' | 'rejected') => Promise<boolean>;
+  teacherApplications: TeacherApplication[];
+  refreshTeacherApplications: () => Promise<void>;
+  helpRequests: TeacherHelpRequest[];
+  requestHelp: (topic: string, message: string) => Promise<boolean>;
+  answerHelpRequest: (requestId: string, answer: string) => Promise<boolean>;
 }
