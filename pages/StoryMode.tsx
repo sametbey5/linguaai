@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGamification } from '../context/GamificationContext';
 import Button from '../components/Button';
 import { BookOpen, MessageCircle, Mic, ArrowRight, CheckCircle, XCircle, Sparkles, PlayCircle } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface StoryNode {
   id: string;
@@ -149,8 +150,34 @@ const StoryMode: React.FC = () => {
       <div className="flex-1 bg-white rounded-[3rem] shadow-2xl border-4 border-slate-100 overflow-hidden relative flex flex-col">
         {/* Visual / Context Area */}
         <div className="h-64 bg-slate-100 relative flex items-center justify-center overflow-hidden">
-           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#cbd5e1 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
-           <div className="text-9xl animate-float">☕</div>
+           {/* Background Layer */}
+           <img 
+             src="https://i.ibb.co/0px38NbK/Layer-0-original.png" 
+             alt="Coffee Shop Background" 
+             className="absolute inset-0 w-full h-full object-cover"
+             referrerPolicy="no-referrer"
+           />
+           
+           {/* Person Layer with Movement */}
+           <motion.img 
+             src="https://i.ibb.co/QyCJN1s/Layer-1-original.png" 
+             alt="Barista" 
+             className="relative h-full object-contain z-10"
+             referrerPolicy="no-referrer"
+             animate={{ 
+               y: [0, -4, 0],
+               rotate: [0, 0.5, 0, -0.5, 0],
+               scale: [1, 1.01, 1]
+             }}
+             transition={{ 
+               duration: 5, 
+               repeat: Infinity, 
+               ease: "easeInOut" 
+             }}
+           />
+           
+           {/* Subtle Overlay for depth */}
+           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
         </div>
 
         {/* Dialogue Area */}
