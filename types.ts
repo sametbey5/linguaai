@@ -130,6 +130,9 @@ export interface LeaderboardEntry {
   avatar: string;
   color?: string; // New field for leaderboard display
   isCurrentUser?: boolean;
+  isAdmin?: boolean;
+  isVerifiedTeacher?: boolean;
+  isPremium?: boolean;
 }
 
 export interface QuizQuestion {
@@ -261,6 +264,7 @@ export interface GamificationContextType {
   applyForTeacher: (specialty: string, experience: string) => Promise<{ success: boolean; msg: string }>;
   verifyTeacher: (applicationId: string, status: 'approved' | 'rejected') => Promise<boolean>;
   teacherApplications: TeacherApplication[];
+  verifiedTeachers: TeacherApplication[];
   refreshTeacherApplications: () => Promise<void>;
   helpRequests: TeacherHelpRequest[];
   requestHelp: (topic: string, message: string) => Promise<boolean>;

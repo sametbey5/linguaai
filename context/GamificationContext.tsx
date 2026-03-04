@@ -47,7 +47,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [stats, setStats] = useState<UserStats>(defaultProfile.stats);
   const [badges, setBadges] = useState<Badge[]>(defaultProfile.badges);
   const [quests, setQuests] = useState<Quest[]>(defaultProfile.quests);
-  const [mode, setMode] = useState<AppMode>(defaultProfile.mode);
+  const [mode, setMode] = useState<AppMode>('kids');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userTrades, setUserTrades] = useState<UserTrade[]>([]);
   const [isPremium, setIsPremium] = useState<boolean>(false);
@@ -76,6 +76,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [teacherStatus, setTeacherStatus] = useState<'none' | 'pending' | 'verified'>('none');
   const [teacherApplications, setTeacherApplications] = useState<TeacherApplication[]>([]);
   const [helpRequests, setHelpRequests] = useState<TeacherHelpRequest[]>([]);
+  const [verifiedTeachers, setVerifiedTeachers] = useState<TeacherApplication[]>([]);
 
   // --- IAP Initialization ---
   useEffect(() => {
@@ -336,7 +337,10 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       // Mark current user
       const marked = data.map(entry => ({
         ...entry,
-        isCurrentUser: entry.id === userId
+        isCurrentUser: entry.id === userId,
+        isAdmin: entry.isAdmin,
+        isVerifiedTeacher: entry.isVerifiedTeacher,
+        isPremium: entry.isPremium
       }));
       setLeaderboard(marked);
     };
@@ -355,6 +359,8 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
           const apps = await db.getTeacherApplications();
           setTeacherApplications(apps);
         }
+        const verified = await db.getVerifiedTeachers();
+        setVerifiedTeachers(verified);
         const requests = await db.getHelpRequests();
         setHelpRequests(requests);
       }
@@ -1008,7 +1014,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       isContactOpen, setIsContactOpen, sendAdminMessage, replyToRequest,
       focusArea, usageContext, cefrLevel, preferredLanguage, email, updateProfile,
       requestPasswordReset, verifyResetCode, changeUsername, refreshTradeOffers,
-      isVerifiedTeacher, teacherStatus, applyForTeacher, verifyTeacher, teacherApplications, refreshTeacherApplications, helpRequests, requestHelp, answerHelpRequest
+      isVerifiedTeacher, teacherStatus, applyForTeacher, verifyTeacher, teacherApplications, verifiedTeachers, refreshTeacherApplications, helpRequests, requestHelp, answerHelpRequest
     }}>
       {children}
       

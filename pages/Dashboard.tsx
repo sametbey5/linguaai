@@ -9,6 +9,7 @@ import { BadgeDisplayKids, BadgeDisplayPro } from '../components/BadgeDisplay';
 import ProgressTracker from '../components/ProgressTracker';
 import { ALL_BADGES } from '../constants/badges';
 import MysteryBox from '../components/MysteryBox';
+import UserRoleBadge from '../components/UserRoleBadge';
 
 const THEME_COLORS = [
   'bg-fun-blue', 'bg-fun-green', 'bg-fun-yellow', 'bg-fun-orange', 'bg-fun-pink', 'bg-fun-purple',
@@ -82,7 +83,7 @@ const AVATAR_FEATURES = {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { stats, quests, mode, awardPoints, badges, setThemeColor, setAvatar, grantBadge, userId, isPremium } = useGamification();
+  const { stats, quests, mode, awardPoints, badges, setThemeColor, setAvatar, grantBadge, userId, isPremium, isAdmin, isVerifiedTeacher, verifiedTeachers } = useGamification();
   const [showMysteryBox, setShowMysteryBox] = useState(false);
   const [isBoxClaimed, setIsBoxClaimed] = useState(false);
   const [showStyleModal, setShowStyleModal] = useState(false);
@@ -118,7 +119,7 @@ const Dashboard: React.FC = () => {
     }
   }, [stats.avatar]);
   
-  const isKids = mode === 'kids';
+  const isKids = true; // Forced to kids mode
 
   // Helper to format username
   const displayName = userId ? userId.charAt(0).toUpperCase() + userId.slice(1) : `Hero ${stats.level}`;
@@ -230,7 +231,7 @@ const Dashboard: React.FC = () => {
     </div>
   );
 
-  const SkillTreeCard = ({ skill, onClick }: { skill: SkillTree, onClick: () => void }) => (
+  const SkillTreeCard = ({ skill, onClick }: { skill: any, onClick: () => void }) => (
       <div onClick={onClick} className={`bg-white p-6 rounded-[2rem] border-4 border-slate-100 shadow-lg cursor-pointer hover:border-fun-blue hover:scale-105 transition-all group relative overflow-hidden`}>
           <div className={`absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform`}>
               {skill.icon}
@@ -268,7 +269,6 @@ const Dashboard: React.FC = () => {
       </div>
   );
 
-  // --- FUN DASHBOARD (KIDS) ---
   return (
     <div className="space-y-10 animate-fade-in pb-20">
       {showStyleModal && <StylePickerModal />}
@@ -308,15 +308,13 @@ const Dashboard: React.FC = () => {
                 {stats.identityTitle || 'Explorer'} <Sparkles className="text-fun-yellow animate-pulse shrink-0" size={20} />
               </h2>
               <p className="text-slate-500 font-bold text-sm sm:text-base">Level {stats.level} • <span className="text-fun-pink">{displayName}</span></p>
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                  <span className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest border border-slate-200">
                     {userId}
                  </span>
-                 {isPremium && (
-                    <span className="px-2 py-0.5 bg-amber-100 rounded-full text-[10px] font-black text-amber-600 uppercase tracking-widest border border-amber-200 flex items-center gap-1">
-                       <Crown size={10} /> PRO
-                    </span>
-                 )}
+                 {isAdmin && <UserRoleBadge role="admin" size="sm" />}
+                 {isVerifiedTeacher && <UserRoleBadge role="teacher" size="sm" />}
+                 {isPremium && <UserRoleBadge role="premium" size="sm" />}
               </div>
            </div>
         </div>
@@ -446,27 +444,31 @@ const Dashboard: React.FC = () => {
                     </button>
                 </div>
                 <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-                    {[
-                        { name: 'Sarah', username: '@sarah_grammar', img: 'https://i.pravatar.cc/150?u=sarah' },
-                        { name: 'Mike', username: '@mike_vocab', img: 'https://i.pravatar.cc/150?u=mike' },
-                        { name: 'Elena', username: '@elena_pro', img: 'https://i.pravatar.cc/150?u=elena' }
-                    ].map((teacher, idx) => (
-                        <div key={idx} className="flex flex-col items-center gap-2 min-w-[120px]">
-                            <div className="relative group">
-                                <img 
-                                    src={teacher.img} 
-                                    alt={teacher.name} 
-                                    className="w-20 h-20 rounded-full border-4 border-slate-50 shadow-md group-hover:scale-110 transition-transform"
-                                    referrerPolicy="no-referrer"
-                                />
-                                <div className="absolute bottom-0 right-0 w-5 h-5 bg-fun-green border-2 border-white rounded-full" />
-                            </div>
-                            <div className="text-center">
-                                <p className="font-black text-slate-800 text-sm">{teacher.name}</p>
-                                <p className="text-[10px] font-bold text-fun-blue">{teacher.username}</p>
-                            </div>
+                    {verifiedTeachers.length === 0 ? (
+                        <div className="flex items-center gap-4 text-slate-400 font-bold italic p-4">
+                            No verified teachers yet.
                         </div>
-                    ))}
+                    ) : (
+                        verifiedTeachers.map((teacher, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-2 min-w-[120px] cursor-pointer" onClick={() => navigate('/teachers')}>
+                                <div className="relative group">
+                                    <img 
+                                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${teacher.username}`} 
+                                        alt={teacher.username} 
+                                        className="w-20 h-20 rounded-full border-4 border-slate-50 shadow-md group-hover:scale-110 transition-transform bg-slate-100"
+                                        referrerPolicy="no-referrer"
+                                    />
+                                    <div className="absolute bottom-0 right-0 w-5 h-5 bg-fun-green border-2 border-white rounded-full flex items-center justify-center">
+                                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                                    </div>
+                                </div>
+                                <div className="text-center">
+                                    <p className="font-black text-slate-800 text-sm">{teacher.username}</p>
+                                    <UserRoleBadge role="teacher" size="sm" showText={false} />
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         </div>
@@ -548,7 +550,5 @@ const Dashboard: React.FC = () => {
     </div>
   );
 };
-
-// ... (Keep Helper Components if needed, but mostly replaced)
 
 export default Dashboard;

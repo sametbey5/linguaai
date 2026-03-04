@@ -4,6 +4,8 @@ import { useGamification } from '../context/GamificationContext';
 import { Trophy, Medal, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import UserRoleBadge from '../components/UserRoleBadge';
+
 const Leaderboard: React.FC = () => {
   const { leaderboard } = useGamification();
   const navigate = useNavigate();
@@ -36,7 +38,7 @@ const Leaderboard: React.FC = () => {
         </div>
 
         <div className="p-4 space-y-3">
-          {leaderboard.map((user, index) => (
+          {leaderboard.map((user: any, index) => (
             <div 
               key={user.id} 
               onClick={() => navigate(`/profile/${user.id}`)}
@@ -60,10 +62,17 @@ const Leaderboard: React.FC = () => {
               </div>
 
               <div className="flex-1">
-                <h4 className={`text-xl font-black ${user.isCurrentUser ? 'text-fun-blue' : 'text-slate-700'}`}>
-                  {user.name} {user.isCurrentUser && '(You)'}
-                </h4>
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-wide">Rank #{index + 1}</p>
+                <div className="flex flex-col">
+                  <h4 className={`text-xl font-black ${user.isCurrentUser ? 'text-fun-blue' : 'text-slate-700'}`}>
+                    {user.name} {user.isCurrentUser && '(You)'}
+                  </h4>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {user.isAdmin && <UserRoleBadge role="admin" size="sm" />}
+                    {user.isVerifiedTeacher && <UserRoleBadge role="teacher" size="sm" />}
+                    {user.isPremium && <UserRoleBadge role="premium" size="sm" />}
+                  </div>
+                </div>
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-wide mt-1">Rank #{index + 1}</p>
               </div>
 
               <div className="text-right bg-slate-50 px-4 py-2 rounded-xl border-2 border-slate-100 group-hover:bg-white transition-colors">

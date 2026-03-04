@@ -16,7 +16,6 @@ import MascotTalk from './pages/MascotTalk';
 import MascotChat from './pages/MascotChat';
 import SpeedRacer from './pages/SpeedRacer';
 import WordWhack from './pages/WordWhack';
-import Premium from './pages/Premium';
 import BadgeTrading from './pages/BadgeTrading';
 import AdminPanel from './pages/AdminPanel';
 import UserProfileView from './pages/UserProfileView';
@@ -71,7 +70,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/leaderboard" element={<AuthWrapper><Leaderboard /></AuthWrapper>} />
       <Route path="/profile/:userId" element={<AuthWrapper><UserProfileView /></AuthWrapper>} />
       <Route path="/trading" element={<AuthWrapper><BadgeTrading /></AuthWrapper>} />
-      <Route path="/premium" element={<AuthWrapper><Premium /></AuthWrapper>} />
       <Route path="/settings" element={<AuthWrapper><AccountSettings /></AuthWrapper>} />
       <Route path="/notifications" element={<AuthWrapper><Notifications /></AuthWrapper>} />
       <Route path="/admin" element={<AuthWrapper><AdminPanel /></AuthWrapper>} />

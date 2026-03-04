@@ -8,11 +8,13 @@ import { BadgeDisplayKids, BadgeDisplayPro } from '../components/BadgeDisplay';
 import Button from '../components/Button';
 import { ChevronLeft, Trophy, Star, Flame, User, LayoutDashboard, Crown, ShieldCheck, GraduationCap } from 'lucide-react';
 
+import UserRoleBadge from '../components/UserRoleBadge';
+
 const UserProfileView: React.FC = () => {
     const { userId } = useParams<{ userId: string }>();
     const navigate = useNavigate();
     const { mode } = useGamification();
-    const isKids = mode === 'kids';
+    const isKids = true; // Forced to kids mode
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -41,88 +43,6 @@ const UserProfileView: React.FC = () => {
         );
     }
 
-    // Professional View
-    if (!isKids) {
-        return (
-            <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-6">
-                    <div className="flex items-center gap-4">
-                        <Button variant="pro-outline" onClick={() => navigate(-1)} className="p-2 h-auto">
-                            <ChevronLeft size={20} />
-                        </Button>
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-2xl bg-slate-100 border-2 border-slate-200 overflow-hidden shadow-sm">
-                                <img 
-                                    src={profile.stats.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix'} 
-                                    alt={userId} 
-                                    className="w-full h-full object-cover"
-                                    referrerPolicy="no-referrer"
-                                />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                                    {userId}'s Profile
-                                    {profile.isAdmin && <ShieldCheck size={18} className="text-red-500" />}
-                                    {profile.isVerifiedTeacher && <GraduationCap size={18} className="text-fun-blue" />}
-                                    {profile.isPremium && <Crown size={18} className="text-amber-500" />}
-                                </h2>
-                                <p className="text-slate-500 font-medium">{profile.stats.identityTitle || 'Explorer'}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <div className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 text-center">
-                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Joined</p>
-                            <p className="text-sm font-bold text-slate-700">{new Date().toLocaleDateString()}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                        <div className="bg-yellow-100 p-3 rounded-full text-yellow-600">
-                            <Star size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-slate-500">Total XP</p>
-                            <p className="text-xl font-bold text-slate-900">{profile.stats.points}</p>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                        <div className="bg-blue-100 p-3 rounded-full text-blue-600">
-                            <LayoutDashboard size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-slate-500">Level</p>
-                            <p className="text-xl font-bold text-slate-900">{profile.stats.level}</p>
-                        </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
-                        <div className="bg-orange-100 p-3 rounded-full text-orange-600">
-                            <Flame size={24} />
-                        </div>
-                        <div>
-                            <p className="text-sm text-slate-500">Streak</p>
-                            <p className="text-xl font-bold text-slate-900">{profile.stats.streakDays} Days</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                    <h3 className="font-semibold text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-100 pb-4">
-                        <Trophy size={20} className="text-blue-600"/> Achievement Collection
-                    </h3>
-                    <div className="flex flex-wrap gap-4">
-                        {profile.badges.length === 0 && <p className="text-slate-400">No badges earned yet.</p>}
-                        {profile.badges.map((b, index) => (
-                            <BadgeDisplayPro key={`${b.id}-${index}`} badge={b} />
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     // Kids View
     return (
         <div className="max-w-4xl mx-auto space-y-10 animate-fade-in pb-20">
@@ -143,11 +63,13 @@ const UserProfileView: React.FC = () => {
                         <div>
                             <h2 className="text-3xl font-black text-slate-800 flex items-center gap-2">
                                 {userId}
-                                {profile.isAdmin && <ShieldCheck size={24} className="text-red-500 fill-red-500" />}
-                                {profile.isVerifiedTeacher && <GraduationCap size={24} className="text-fun-blue fill-fun-blue" />}
-                                {profile.isPremium && <Crown size={24} className="text-amber-500 fill-amber-500 animate-pulse" />}
                             </h2>
-                            <p className="text-fun-pink font-black text-sm uppercase tracking-widest">{profile.stats.identityTitle || 'Explorer'}</p>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                {profile.isAdmin && <UserRoleBadge role="admin" size="md" />}
+                                {profile.isVerifiedTeacher && <UserRoleBadge role="teacher" size="md" />}
+                                {profile.isPremium && <UserRoleBadge role="premium" size="md" />}
+                            </div>
+                            <p className="text-fun-pink font-black text-sm uppercase tracking-widest mt-1">{profile.stats.identityTitle || 'Explorer'}</p>
                         </div>
                     </div>
                 </div>

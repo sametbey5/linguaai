@@ -808,6 +808,29 @@ export const db = {
       return false;
     }
   },
+  async getVerifiedTeachers(): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('teacher_applications')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return (data || []).map(app => ({
+        id: app.id,
+        userId: app.user_id || app.userId,
+        username: app.username,
+        specialty: app.specialty,
+        experience: app.experience,
+        status: app.status,
+        createdAt: app.created_at || app.createdAt
+      }));
+    } catch (e) {
+      console.error("Fetch verified teachers error", e);
+      return [];
+    }
+  },
   async getLingavoLearnsVideos(): Promise<any[]> {
     try {
       const { data: channels, error: channelError } = await supabase
