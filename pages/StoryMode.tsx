@@ -17,7 +17,15 @@ interface StoryNode {
   background?: string;
 }
 
-const MOCK_STORY: Record<string, StoryNode> = {
+interface Scenario {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  story: Record<string, StoryNode>;
+}
+
+const COFFEE_SHOP_STORY: Record<string, StoryNode> = {
   'start': {
     id: 'start',
     text: "You arrive at the coffee shop. The barista smiles at you.",
@@ -71,17 +79,153 @@ const MOCK_STORY: Record<string, StoryNode> = {
   }
 };
 
+const TRAIN_STATION_STORY: Record<string, StoryNode> = {
+  'start': {
+    id: 'start',
+    text: 'You arrive at the train station ticket counter. The clerk waves at you.',
+    speaker: 'Narrator',
+    options: [
+      { text: "Ticket. City center.", nextId: 'rude', isCorrect: false, feedback: 'Understandable, but too abrupt. Try a full polite request.' },
+      { text: "Hi! Could I get a ticket to the city center, please?", nextId: 'polite', isCorrect: true, feedback: 'Excellent! That sounds natural and polite.' }
+    ]
+  },
+  'rude': {
+    id: 'rude',
+    text: "The clerk nods. 'One-way or round-trip?'",
+    speaker: 'Clerk',
+    options: [
+      { text: 'Return.', nextId: 'end_neutral', isCorrect: false, feedback: "Try saying 'A round-trip ticket, please.'" },
+      { text: 'A round-trip ticket, please.', nextId: 'end_good', isCorrect: true, feedback: 'Great recovery!' }
+    ]
+  },
+  'polite': {
+    id: 'polite',
+    text: "'Sure! One-way or round-trip?' the clerk asks.",
+    speaker: 'Clerk',
+    options: [
+      { text: 'Round-trip, please.', nextId: 'end_great', isCorrect: true, feedback: 'Nice and clear!' },
+      { text: 'Just give me the normal one.', nextId: 'end_neutral', isCorrect: false, feedback: 'A bit unclear. Be specific.' }
+    ]
+  },
+  'end_neutral': {
+    id: 'end_neutral',
+    text: 'Okay, your ticket is ready. That will be $8.',
+    speaker: 'Clerk',
+    options: [{ text: 'Finish Story', nextId: 'finish' }]
+  },
+  'end_good': {
+    id: 'end_good',
+    text: 'Perfect, here is your round-trip ticket. Have a safe journey!',
+    speaker: 'Clerk',
+    options: [{ text: 'Finish Story', nextId: 'finish' }]
+  },
+  'end_great': {
+    id: 'end_great',
+    text: 'Great choice! Platform 3, departure in 10 minutes. Have a good trip!',
+    speaker: 'Clerk',
+    options: [{ text: 'Finish Story', nextId: 'finish' }]
+  }
+};
+
+const PHARMACY_STORY: Record<string, StoryNode> = {
+  'start': {
+    id: 'start',
+    text: 'You enter a pharmacy. The pharmacist smiles and asks how they can help.',
+    speaker: 'Narrator',
+    options: [
+      { text: "Need medicine. Head hurts.", nextId: 'rude', isCorrect: false, feedback: 'The message is clear, but try a polite sentence.' },
+      { text: "Hi, could you recommend something for a headache, please?", nextId: 'polite', isCorrect: true, feedback: 'Great request! Polite and specific.' }
+    ]
+  },
+  'rude': {
+    id: 'rude',
+    text: "The pharmacist nods. 'Do you prefer tablets or syrup?'",
+    speaker: 'Pharmacist',
+    options: [
+      { text: 'Tablets.', nextId: 'end_neutral', isCorrect: false, feedback: "Try 'Tablets, please.'" },
+      { text: 'Tablets, please.', nextId: 'end_good', isCorrect: true, feedback: 'Much better!' }
+    ]
+  },
+  'polite': {
+    id: 'polite',
+    text: "'Of course. Do you prefer tablets or syrup?'",
+    speaker: 'Pharmacist',
+    options: [
+      { text: 'Tablets, please.', nextId: 'end_great', isCorrect: true, feedback: 'Excellent response.' },
+      { text: 'Whatever, just fast.', nextId: 'end_neutral', isCorrect: false, feedback: 'A bit impolite. Keep your tone friendly.' }
+    ]
+  },
+  'end_neutral': {
+    id: 'end_neutral',
+    text: 'Here you are. Please follow the instructions on the box.',
+    speaker: 'Pharmacist',
+    options: [{ text: 'Finish Story', nextId: 'finish' }]
+  },
+  'end_good': {
+    id: 'end_good',
+    text: 'Great. Take one tablet every 8 hours after meals.',
+    speaker: 'Pharmacist',
+    options: [{ text: 'Finish Story', nextId: 'finish' }]
+  },
+  'end_great': {
+    id: 'end_great',
+    text: 'Perfect. Let me know if you have allergies. Get well soon!',
+    speaker: 'Pharmacist',
+    options: [{ text: 'Finish Story', nextId: 'finish' }]
+  }
+};
+
+const STORY_SCENARIOS: Scenario[] = [
+  {
+    id: 'coffee-shop',
+    title: 'Coffee Shop Run',
+    subtitle: 'Real Life • Level 1',
+    icon: '☕',
+    story: COFFEE_SHOP_STORY
+  },
+  {
+    id: 'train-station',
+    title: 'Train Station Tickets',
+    subtitle: 'Real Life • Level 2',
+    icon: '🚆',
+    story: TRAIN_STATION_STORY
+  },
+  {
+    id: 'pharmacy',
+    title: 'Pharmacy Help',
+    subtitle: 'Real Life • Level 2',
+    icon: '💊',
+    story: PHARMACY_STORY
+  }
+];
+
 const StoryMode: React.FC = () => {
   const navigate = useNavigate();
   const { awardPoints } = useGamification();
+  const [selectedScenarioId, setSelectedScenarioId] = useState(STORY_SCENARIOS[0].id);
   const [currentNodeId, setCurrentNodeId] = useState('start');
   const [history, setHistory] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const currentNode = MOCK_STORY[currentNodeId];
+  const selectedScenario = STORY_SCENARIOS.find((scenario) => scenario.id === selectedScenarioId) || STORY_SCENARIOS[0];
+  const currentNode = selectedScenario.story[currentNodeId];
+
+  const resetStoryProgress = () => {
+    setCurrentNodeId('start');
+    setHistory([]);
+    setFeedback(null);
+    setIsCompleted(false);
+  };
+
+  const handleScenarioChange = (scenarioId: string) => {
+    if (scenarioId === selectedScenarioId) return;
+    setSelectedScenarioId(scenarioId);
+    resetStoryProgress();
+  };
 
   const handleOption = (option: any) => {
+    setHistory((prev) => [...prev, option.text]);
     if (option.feedback) {
       setFeedback(option.feedback);
       // Delay moving to next node to show feedback
@@ -136,8 +280,8 @@ const StoryMode: React.FC = () => {
             <BookOpen size={24} />
           </div>
           <div>
-            <h2 className="font-black text-2xl text-slate-800">Coffee Shop Run</h2>
-            <p className="text-slate-400 font-bold text-sm">Real Life • Level 1</p>
+            <h2 className="font-black text-2xl text-slate-800">{selectedScenario.title}</h2>
+            <p className="text-slate-400 font-bold text-sm">{selectedScenario.subtitle}</p>
           </div>
         </div>
         <div className="bg-slate-100 px-4 py-2 rounded-full font-bold text-slate-500">
@@ -147,10 +291,26 @@ const StoryMode: React.FC = () => {
 
       {/* Story Stage */}
       <div className="flex-1 bg-white rounded-[3rem] shadow-2xl border-4 border-slate-100 overflow-hidden relative flex flex-col">
+        <div className="px-6 pt-6 pb-3 flex gap-3 overflow-x-auto">
+          {STORY_SCENARIOS.map((scenario) => (
+            <button
+              key={scenario.id}
+              onClick={() => handleScenarioChange(scenario.id)}
+              className={`px-4 py-2 rounded-full font-bold whitespace-nowrap border-2 transition-all ${
+                scenario.id === selectedScenarioId
+                  ? 'bg-fun-blue text-white border-fun-blue'
+                  : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-fun-blue hover:text-fun-blue'
+              }`}
+            >
+              {scenario.icon} {scenario.title}
+            </button>
+          ))}
+        </div>
+
         {/* Visual / Context Area */}
         <div className="h-64 bg-slate-100 relative flex items-center justify-center overflow-hidden">
            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#cbd5e1 2px, transparent 2px)', backgroundSize: '20px 20px' }}></div>
-           <div className="text-9xl animate-float">☕</div>
+           <div className="text-9xl animate-float">{selectedScenario.icon}</div>
         </div>
 
         {/* Dialogue Area */}
