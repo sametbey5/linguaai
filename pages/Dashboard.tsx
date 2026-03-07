@@ -453,7 +453,7 @@ const Dashboard: React.FC = () => {
                             <div key={idx} className="flex flex-col items-center gap-2 min-w-[120px] cursor-pointer" onClick={() => navigate('/teachers')}>
                                 <div className="relative group">
                                     <img 
-                                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${teacher.username}`} 
+                                        src={teacher.avatar} 
                                         alt={teacher.username} 
                                         className="w-20 h-20 rounded-full border-4 border-slate-50 shadow-md group-hover:scale-110 transition-transform bg-slate-100"
                                         referrerPolicy="no-referrer"

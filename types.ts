@@ -193,6 +193,7 @@ export interface TeacherApplication {
   specialty: string;
   experience: string;
   status: 'pending' | 'approved' | 'rejected';
+  avatar?: string;
   createdAt: string;
 }
 

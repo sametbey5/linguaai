@@ -38,7 +38,7 @@ const Teachers: React.FC = () => {
                 <div className="flex justify-center relative">
                   <div className="relative">
                     <img 
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${teacher.username}`} 
+                      src={teacher.avatar} 
                       alt={teacher.username} 
                       className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover bg-slate-100"
                       referrerPolicy="no-referrer"

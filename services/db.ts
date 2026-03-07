@@ -810,22 +810,38 @@ export const db = {
   },
   async getVerifiedTeachers(): Promise<any[]> {
     try {
-      const { data, error } = await supabase
+      // First get approved applications
+      const { data: apps, error: appError } = await supabase
         .from('teacher_applications')
         .select('*')
         .eq('status', 'approved')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return (data || []).map(app => ({
-        id: app.id,
-        userId: app.user_id || app.userId,
-        username: app.username,
-        specialty: app.specialty,
-        experience: app.experience,
-        status: app.status,
-        createdAt: app.created_at || app.createdAt
-      }));
+      if (appError) throw appError;
+      if (!apps || apps.length === 0) return [];
+
+      // Then get profiles for these users to get their avatars
+      const userIds = apps.map(app => app.user_id || app.userId);
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, data')
+        .in('id', userIds);
+
+      if (profileError) throw profileError;
+
+      return apps.map(app => {
+        const profile = profiles?.find(p => p.id === (app.user_id || app.userId));
+        return {
+          id: app.id,
+          userId: app.user_id || app.userId,
+          username: app.username,
+          specialty: app.specialty,
+          experience: app.experience,
+          status: app.status,
+          avatar: profile?.data?.stats?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${app.username}`,
+          createdAt: app.created_at || app.createdAt
+        };
+      });
     } catch (e) {
       console.error("Fetch verified teachers error", e);
       return [];
