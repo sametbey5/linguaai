@@ -153,7 +153,7 @@ export interface UserProfile {
   email?: string;
   resetCode?: string;
   trades?: UserTrade[]; // Added for P2P trading history
-  isPremium?: boolean; // New field for FlutterFlow/RevenueCat integration
+  isPremium?: boolean; // New field for Google Play Billing integration
   focusArea?: string[]; // e.g., ['Vocabulary', 'Speaking']
   usageContext?: string; // e.g., 'Business', 'Travel'
   cefrLevel?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';

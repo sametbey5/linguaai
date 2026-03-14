@@ -99,7 +99,7 @@ const Premium: React.FC = () => {
             </Button>
           </div>
 
-          {/* RevenueCat Packages */}
+          {/* Google Play Packages */}
           {packages.map((pkg) => (
             <div key={pkg.identifier} className="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl flex flex-col relative overflow-hidden text-white">
               <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -139,7 +139,7 @@ const Premium: React.FC = () => {
                           onClick={() => handleSubscribe(pkg)}
                           isLoading={isLoading}
                       >
-                           <Play size={18} className="mr-2 fill-current" /> Subscribe Now
+                           <Play size={18} className="mr-2 fill-current" /> Subscribe via Google Play
                       </Button>
                   </div>
               )}
@@ -188,7 +188,7 @@ const Premium: React.FC = () => {
             <Button variant="secondary" className="w-full text-xl py-4 rounded-2xl" disabled>YOUR PLAN</Button>
          </div>
 
-         {/* Premium Cards from RevenueCat */}
+         {/* Google Play Packages */}
          {packages.map((pkg) => (
            <div key={pkg.identifier} className={`bg-fun-blue p-8 rounded-[3rem] border-b-[12px] border-blue-800 shadow-2xl relative transform transition-transform text-white overflow-hidden ${isPremium ? 'opacity-90' : 'hover:scale-105'}`}>
               <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none" />
@@ -232,7 +232,7 @@ const Premium: React.FC = () => {
                           onClick={() => handleSubscribe(pkg)}
                           isLoading={isLoading}
                         >
-                           <Play size={28} className="fill-current text-green-500" /> UNLOCK NOW!
+                           <Play size={28} className="fill-current text-green-500" /> BUY ON GOOGLE PLAY
                         </Button>
                     </div>
                  )}

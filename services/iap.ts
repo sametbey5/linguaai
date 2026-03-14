@@ -1,7 +1,5 @@
 
-import { Purchases, LogLevel, type Package as RCPackage, type CustomerInfo, type Offerings } from '@revenuecat/purchases-js';
-
-// --- SHARED TYPES ---
+// Mock implementation for Google Play Billing
 export interface PurchasesPackage {
     identifier: string;
     product: {
@@ -10,153 +8,59 @@ export interface PurchasesPackage {
         description: string;
         currencyCode?: string;
     };
-    rawPackage?: RCPackage; 
 }
 
-const REVENUECAT_API_KEY = (import.meta.env.VITE_REVENUECAT_PUBLIC_KEY as string) || "";
-
-// Helper to get the instance
-const getPurchases = (): Purchases => {
-    try {
-        return Purchases.getSharedInstance();
-    } catch (e) {
-        throw new Error("RevenueCat not initialized. Call initialize() first.");
-    }
-};
-
 export const IAP = {
-    /**
-     * Initialize Payment Service
-     */
     async initialize(userId: string) {
-        if (!REVENUECAT_API_KEY) {
-            console.warn("IAP: RevenueCat API Key missing. Skipping initialization.");
-            return;
-        }
-
-        try {
-            console.log("IAP: Initializing RevenueCat...");
-            // Set log level for debugging
-            Purchases.setLogLevel(LogLevel.Debug);
-            
-            // Configure RevenueCat
-            Purchases.configure({
-                apiKey: REVENUECAT_API_KEY,
-                appUserId: userId,
-            });
-        } catch (error) {
-            console.error("IAP: Failed to initialize RevenueCat", error);
-        }
+        console.log("IAP: Initializing Google Play Billing mock...");
     },
 
-    /**
-     * Get available packages (products) to display in UI
-     */
     async getPackages(): Promise<PurchasesPackage[]> {
-        if (!REVENUECAT_API_KEY) return [];
-
-        try {
-            const purchases = getPurchases();
-            const offerings: Offerings = await purchases.getOfferings();
-            if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
-                return offerings.current.availablePackages.map(pkg => ({
-                    identifier: pkg.identifier,
-                    product: {
-                        priceString: pkg.webBillingProduct.currentPrice.formattedPrice,
-                        title: pkg.webBillingProduct.title,
-                        description: pkg.webBillingProduct.description || "",
-                        currencyCode: pkg.webBillingProduct.currentPrice.currency
-                    },
-                    rawPackage: pkg
-                }));
+        // Mock Google Play products
+        return [
+            {
+                identifier: 'premium_monthly',
+                product: {
+                    priceString: '$9.99',
+                    title: 'Pro Monthly',
+                    description: 'Monthly subscription to Pro features',
+                    currencyCode: 'USD'
+                }
+            },
+            {
+                identifier: 'premium_annual',
+                product: {
+                    priceString: '$79.99',
+                    title: 'Pro Annual',
+                    description: 'Annual subscription to Pro features (Best Value)',
+                    currencyCode: 'USD'
+                }
             }
-        } catch (error) {
-            console.error("IAP: Error fetching offerings", error);
-        }
-        return [];
+        ];
     },
 
-    /**
-     * Purchase a specific package
-     */
     async purchasePackage(pkg: PurchasesPackage): Promise<boolean> {
-        if (!pkg.rawPackage) return false;
-
-        try {
-            const purchases = getPurchases();
-            const { customerInfo } = await purchases.purchasePackage(pkg.rawPackage);
-            // Check if the "premium" entitlement is active
-            return customerInfo.entitlements.active.hasOwnProperty("premium");
-        } catch (error: any) {
-            if (error.errorCode === 1) { // UserCancelledError
-                console.log("IAP: User cancelled the purchase");
-            } else {
-                console.error("IAP: Purchase error", error);
-            }
-            return false;
-        }
+        console.log(`IAP: Simulating Google Play purchase for ${pkg.identifier}`);
+        // Simulate a successful purchase
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(true);
+            }, 1500);
+        });
     },
 
-    /**
-     * Check if user currently has premium access
-     */
     async checkSubscriptionStatus(): Promise<boolean> {
-        if (!REVENUECAT_API_KEY || REVENUECAT_API_KEY.includes('test_XjrJUEZlhPvadEFYDeUeZOycWLV')) {
-            // Return false gracefully if key is missing or placeholder
-            return false;
-        }
-
-        try {
-            const purchases = getPurchases();
-            const customerInfo: CustomerInfo = await purchases.getCustomerInfo();
-            return customerInfo.entitlements.active.hasOwnProperty("premium");
-        } catch (error: any) {
-            // Suppress network errors which are common in dev/preview environments
-            if (error.message && (error.message.includes('network') || error.message.includes('connection'))) {
-                console.warn("IAP: Network error checking subscription (likely offline or blocked). Defaulting to free tier.");
-                return false;
-            }
-            console.error("IAP: Error checking subscription status", error);
-            return false;
-        }
+        // In a real app, you would verify the Google Play purchase token with your backend
+        return false;
     },
 
-    /**
-     * Get detailed premium info
-     */
     async getPremiumDetails() {
-        try {
-            const purchases = getPurchases();
-            const customerInfo: CustomerInfo = await purchases.getCustomerInfo();
-            const premium = customerInfo.entitlements.active["premium"];
-            
-            if (premium) {
-                return {
-                    expirationDate: premium.expirationDate ? premium.expirationDate.toISOString() : undefined,
-                    willRenew: premium.willRenew,
-                    productIdentifier: premium.productIdentifier
-                };
-            }
-            return null;
-        } catch (error) {
-            console.error("IAP: Error getting premium details", error);
-            return null;
-        }
+        return null; // Mock no active subscription initially
     },
 
-    /**
-     * Restore Purchases
-     * On Web Billing, this is effectively checking the latest customer info.
-     */
     async restorePurchases(): Promise<boolean> {
-        try {
-            console.log("IAP: Restoring purchases...");
-            const purchases = getPurchases();
-            const customerInfo: CustomerInfo = await purchases.getCustomerInfo();
-            return customerInfo.entitlements.active.hasOwnProperty("premium");
-        } catch (error) {
-            console.error("IAP: Error restoring purchases", error);
-            return false;
-        }
+        console.log("IAP: Restoring Google Play purchases...");
+        return false;
     }
 };
+

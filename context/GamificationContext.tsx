@@ -80,10 +80,10 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   // --- IAP Initialization ---
   useEffect(() => {
-    // Initialize RevenueCat when userId is available
+    // Initialize Google Play Billing when userId is available
     if (userId) {
         IAP.initialize(userId).then(() => {
-            // Check if user has active subscription from RevenueCat
+            // Check if user has active subscription from Google Play
             IAP.checkSubscriptionStatus().then(isActive => {
                 if (isActive) {
                     setIsPremium(true);

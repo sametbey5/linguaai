@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useGamification } from '../context/GamificationContext';
 import Button from '../components/Button';
-import { Mic, MicOff, Play, RotateCcw, CheckCircle2, AlertCircle, Trophy, Star, ArrowRight, Volume2 } from 'lucide-react';
+import { Mic, MicOff, Play, RotateCcw, CheckCircle2, AlertCircle, Trophy, Star, ArrowRight, Volume2, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Confetti from '../components/Confetti';
 
@@ -13,22 +13,45 @@ interface Phrase {
 }
 
 const PHRASES: Phrase[] = [
+  // Greetings
   { text: "Hello, how are you today?", difficulty: 'Beginner', category: 'Greetings' },
+  { text: "Nice to meet you.", difficulty: 'Beginner', category: 'Greetings' },
+  { text: "Good morning, everyone.", difficulty: 'Beginner', category: 'Greetings' },
+  
+  // Food & Drink
   { text: "I would like to order a cup of coffee.", difficulty: 'Beginner', category: 'Food & Drink' },
-  { text: "The weather is very nice this afternoon.", difficulty: 'Beginner', category: 'Weather' },
+  { text: "Could I see the menu, please?", difficulty: 'Beginner', category: 'Food & Drink' },
+  { text: "The food was delicious, thank you.", difficulty: 'Intermediate', category: 'Food & Drink' },
+  
+  // Travel
+  { text: "Where is the nearest train station?", difficulty: 'Beginner', category: 'Travel' },
+  { text: "I have a reservation for two nights.", difficulty: 'Intermediate', category: 'Travel' },
   { text: "Could you please tell me where the nearest station is?", difficulty: 'Intermediate', category: 'Travel' },
+  
+  // Business
+  { text: "Let's schedule a meeting for next week.", difficulty: 'Intermediate', category: 'Business' },
+  { text: "The entrepreneurial spirit is essential for innovation.", difficulty: 'Advanced', category: 'Business' },
+  { text: "We need to focus on our core competencies.", difficulty: 'Advanced', category: 'Business' },
+  
+  // Tongue Twisters
+  { text: "She sells seashells by the seashore.", difficulty: 'Advanced', category: 'Tongue Twister' },
+  { text: "Peter Piper picked a peck of pickled peppers.", difficulty: 'Advanced', category: 'Tongue Twister' },
+  { text: "How much wood would a woodchuck chuck?", difficulty: 'Advanced', category: 'Tongue Twister' },
+
+  // General
+  { text: "The weather is very nice this afternoon.", difficulty: 'Beginner', category: 'Weather' },
   { text: "I have been studying English for three months.", difficulty: 'Intermediate', category: 'Education' },
   { text: "It is important to practice speaking every day.", difficulty: 'Intermediate', category: 'General' },
   { text: "The phenomenon was particularly fascinating to the researchers.", difficulty: 'Advanced', category: 'Science' },
-  { text: "She sells seashells by the seashore.", difficulty: 'Advanced', category: 'Tongue Twister' },
-  { text: "The entrepreneurial spirit is essential for innovation.", difficulty: 'Advanced', category: 'Business' },
-  { text: "Peter Piper picked a peck of pickled peppers.", difficulty: 'Advanced', category: 'Tongue Twister' },
 ];
+
+const CATEGORIES = Array.from(new Set(PHRASES.map(p => p.category)));
 
 const PronunciationPractice: React.FC = () => {
   const { awardPoints, mode } = useGamification();
   const isKids = mode === 'kids';
 
+  const [view, setView] = useState<'selection' | 'practice'>('selection');
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -36,10 +59,15 @@ const PronunciationPractice: React.FC = () => {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | 'All'>('All');
 
   const recognitionRef = useRef<any>(null);
 
-  const currentPhrase = PHRASES[currentPhraseIndex];
+  const filteredPhrases = selectedCategory === 'All' 
+    ? PHRASES 
+    : PHRASES.filter(p => p.category === selectedCategory);
+
+  const currentPhrase = filteredPhrases[currentPhraseIndex] || PHRASES[0];
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -139,31 +167,117 @@ const PronunciationPractice: React.FC = () => {
   };
 
   const nextPhrase = () => {
-    setCurrentPhraseIndex((prev) => (prev + 1) % PHRASES.length);
+    setCurrentPhraseIndex((prev) => (prev + 1) % filteredPhrases.length);
     setTranscript('');
     setScore(null);
     setFeedback(null);
     setError(null);
   };
 
+  const selectPhrase = (index: number) => {
+    setCurrentPhraseIndex(index);
+    setView('practice');
+    setTranscript('');
+    setScore(null);
+    setFeedback(null);
+    setError(null);
+  };
+
+  if (view === 'selection') {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-6xl mx-auto space-y-8 pb-20 px-4"
+      >
+        <div className="text-center space-y-4">
+          <div className="inline-block bg-fun-blue/10 p-4 rounded-full mb-2">
+              <BookOpen size={48} className="text-fun-blue" />
+          </div>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
+             PHRASE LIBRARY
+          </h2>
+          <p className="text-lg sm:text-xl font-bold text-slate-500 max-w-2xl mx-auto">
+             Choose a phrase to practice your pronunciation! 📚
+          </p>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
+          <button 
+            onClick={() => setSelectedCategory('All')}
+            className={`px-6 py-2 rounded-full font-black text-sm transition-all ${selectedCategory === 'All' ? 'bg-fun-blue text-white shadow-lg' : 'bg-white text-slate-500 border-2 border-slate-100 hover:bg-slate-50'}`}
+          >
+            ALL
+          </button>
+          {CATEGORIES.map(cat => (
+            <button 
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-6 py-2 rounded-full font-black text-sm transition-all ${selectedCategory === cat ? 'bg-fun-blue text-white shadow-lg' : 'bg-white text-slate-500 border-2 border-slate-100 hover:bg-slate-50'}`}
+            >
+              {cat.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredPhrases.map((phrase, idx) => (
+            <motion.div
+              key={idx}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => selectPhrase(idx)}
+              className="bg-white p-6 rounded-[2rem] border-4 border-slate-100 shadow-xl cursor-pointer hover:border-fun-blue transition-all group"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                  phrase.difficulty === 'Beginner' ? 'bg-green-100 text-green-600' :
+                  phrase.difficulty === 'Intermediate' ? 'bg-blue-100 text-blue-600' :
+                  'bg-purple-100 text-purple-600'
+                }`}>
+                  {phrase.difficulty}
+                </span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{phrase.category}</span>
+              </div>
+              <h4 className="text-xl font-bold text-slate-800 mb-6 group-hover:text-fun-blue transition-colors">"{phrase.text}"</h4>
+              <div className="flex items-center justify-between text-fun-blue font-black text-sm">
+                <span>Practice Now</span>
+                <ArrowRight size={20} />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-4xl mx-auto space-y-8 pb-20"
+      className="max-w-4xl mx-auto space-y-8 pb-20 px-4"
     >
       {showConfetti && <Confetti />}
       
-      <div className="text-center space-y-4 px-4">
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={() => setView('selection')}
+          className="flex items-center gap-2 text-slate-500 font-black hover:text-fun-blue transition-colors"
+        >
+          <RotateCcw size={20} /> Back to Library
+        </button>
+        <div className="bg-slate-100 px-4 py-2 rounded-full font-black text-xs text-slate-500 uppercase tracking-widest">
+          Phrase {currentPhraseIndex + 1} of {filteredPhrases.length}
+        </div>
+      </div>
+
+      <div className="text-center space-y-4">
         <div className="inline-block bg-fun-green/10 p-4 rounded-full mb-2">
             <Mic size={48} className="text-fun-green" />
         </div>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
            PRONUNCIATION LAB
         </h2>
-        <p className="text-lg sm:text-xl font-bold text-slate-500 max-w-2xl mx-auto">
-           Listen, speak, and master your English accent! 🎤
-        </p>
       </div>
 
       <div className="bg-white p-6 sm:p-8 md:p-12 rounded-[3rem] border-4 border-slate-100 shadow-2xl relative overflow-hidden">

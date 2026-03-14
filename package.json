@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@capacitor/core": "^5.7.0",
-    "@revenuecat/purchases-js": "^1.26.3",
     "@supabase/supabase-js": "^2.39.7",
     "express": "^5.2.1",
     "lucide-react": "^0.344.0",
