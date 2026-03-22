@@ -9,7 +9,7 @@ import Confetti from '../components/Confetti';
 import { UI_TRANSLATIONS } from '../translations';
 
 const VocabBuilder: React.FC = () => {
-  const { mode, awardPoints, usageContext, preferredLanguage } = useGamification();
+  const { mode, awardPoints, usageContext, preferredLanguage, addToWordBank, cefrLevel } = useGamification();
   const isKids = mode === 'kids';
   
   const t = (key: string) => UI_TRANSLATIONS[preferredLanguage]?.[key] || UI_TRANSLATIONS['Turkish']?.[key] || key;
@@ -32,9 +32,12 @@ const VocabBuilder: React.FC = () => {
   // --- Word Rush Logic ---
   const startGame = async () => {
     setGameState('lobby');
-    const newWords = await generateVocab(topic, mode, usageContext);
+    const newWords = await generateVocab(topic, mode, usageContext, cefrLevel);
     if (newWords.length > 0) {
       setWords(newWords);
+      // Add to Word Bank
+      newWords.forEach(w => addToWordBank(w, `Vocab Builder: ${topic}`));
+      
       setGameState('playing');
       setCurrentIndex(0);
       setScore(0);

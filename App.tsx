@@ -28,6 +28,7 @@ import Notifications from './pages/Notifications';
 import RaceMode from './pages/RaceMode';
 import Teachers from './pages/Teachers';
 import TeacherPanel from './pages/TeacherPanel';
+import WordBank from './pages/WordBank';
 import { GamificationProvider, useGamification } from './context/GamificationContext';
 
 // Auth Wrapper Component
@@ -63,6 +64,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/talk/:id" element={<AuthWrapper><MascotChat /></AuthWrapper>} />
       <Route path="/pronunciation" element={<AuthWrapper><PronunciationPractice /></AuthWrapper>} />
       <Route path="/vocab" element={<AuthWrapper><VocabBuilder /></AuthWrapper>} />
+      <Route path="/wordbank" element={<AuthWrapper><WordBank /></AuthWrapper>} />
       <Route path="/grammar" element={<AuthWrapper><GrammarCoach /></AuthWrapper>} />
       <Route path="/grammar-lessons" element={<AuthWrapper><GrammarLessons /></AuthWrapper>} />
       <Route path="/game/scramble" element={<AuthWrapper><ScrambleMaster /></AuthWrapper>} />

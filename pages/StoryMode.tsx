@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGamification } from '../context/GamificationContext';
 import Button from '../components/Button';
-import { BookOpen, MessageCircle, Mic, ArrowRight, CheckCircle, XCircle, Sparkles, PlayCircle } from 'lucide-react';
+import { CEFR_ORDER } from '../constants';
+import { BookOpen, MessageCircle, Mic, ArrowRight, CheckCircle, XCircle, Sparkles, PlayCircle, Volume2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface StoryNode {
@@ -22,10 +23,12 @@ interface Scenario {
   id: string;
   title: string;
   level: number;
+  cefrLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
   description: string;
   nodes: Record<string, StoryNode>;
   background: string;
   person: string;
+  gender?: 'male' | 'female';
 }
 
 const SCENARIOS: Record<string, Scenario> = {
@@ -33,9 +36,11 @@ const SCENARIOS: Record<string, Scenario> = {
     id: 'coffee_shop',
     title: 'Coffee Shop Run',
     level: 1,
+    cefrLevel: 'A1',
     description: 'Order a coffee politely.',
     background: 'https://i.ibb.co/0px38NbK/Layer-0-original.png',
     person: 'https://i.ibb.co/QyCJN1s/Layer-1-original.png',
+    gender: 'male',
     nodes: {
       'start': {
         id: 'start',
@@ -94,9 +99,11 @@ const SCENARIOS: Record<string, Scenario> = {
     id: 'airport_checkin',
     title: 'Airport Check-in',
     level: 2,
+    cefrLevel: 'A2',
     description: 'Check in for your flight and handle baggage.',
     background: 'https://images.unsplash.com/photo-1436491865332-7a61a109c0f3?auto=format&fit=crop&w=1200&q=80',
     person: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Agent&mouth=smile',
+    gender: 'female',
     nodes: {
       'start': {
         id: 'start',
@@ -164,9 +171,11 @@ const SCENARIOS: Record<string, Scenario> = {
     id: 'grocery_store',
     title: 'Grocery Store',
     level: 1,
+    cefrLevel: 'A1',
     description: 'Find items and pay at the checkout.',
     background: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
     person: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Cashier&mouth=smile',
+    gender: 'female',
     nodes: {
       'start': {
         id: 'start',
@@ -209,9 +218,11 @@ const SCENARIOS: Record<string, Scenario> = {
     id: 'doctor_visit',
     title: 'Doctor\'s Visit',
     level: 2,
+    cefrLevel: 'A2',
     description: 'Explain your symptoms to a doctor.',
     background: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80',
     person: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Doctor&mouth=serious',
+    gender: 'male',
     nodes: {
       'start': {
         id: 'start',
@@ -262,9 +273,11 @@ const SCENARIOS: Record<string, Scenario> = {
     id: 'business_meeting',
     title: 'Business Meeting',
     level: 3,
+    cefrLevel: 'B1',
     description: 'Present your ideas in a professional setting.',
     background: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80',
     person: 'https://api.dicebear.com/7.x/avataaars/svg?seed=CEO&mouth=serious',
+    gender: 'male',
     nodes: {
       'start': {
         id: 'start',
@@ -324,9 +337,11 @@ const SCENARIOS: Record<string, Scenario> = {
     id: 'job_interview',
     title: 'Job Interview',
     level: 3,
+    cefrLevel: 'B1',
     description: 'Practice answering common interview questions.',
     background: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80',
     person: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Manager&mouth=serious',
+    gender: 'female',
     nodes: {
       'start': {
         id: 'start',
@@ -393,15 +408,113 @@ const SCENARIOS: Record<string, Scenario> = {
 
 const StoryMode: React.FC = () => {
   const navigate = useNavigate();
-  const { awardPoints } = useGamification();
+  const { awardPoints, cefrLevel } = useGamification();
   const [currentScenarioId, setCurrentScenarioId] = useState<string | null>(null);
   const [currentNodeId, setCurrentNodeId] = useState('start');
   const [history, setHistory] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
 
+  // Filter scenarios based on CEFR level
+  const filteredScenarios = useMemo(() => {
+    const userLevelIndex = CEFR_ORDER.indexOf(cefrLevel);
+    return Object.values(SCENARIOS).filter(scenario => {
+      const scenarioLevelIndex = CEFR_ORDER.indexOf(scenario.cefrLevel);
+      // Show scenarios at user's level or one level above
+      return scenarioLevelIndex <= userLevelIndex + 1;
+    });
+  }, [cefrLevel]);
+
   const currentScenario = currentScenarioId ? SCENARIOS[currentScenarioId] : null;
   const currentNode = currentScenario ? currentScenario.nodes[currentNodeId] : null;
+
+  // Pre-load voices for better gender selection
+  useEffect(() => {
+    const loadVoices = () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.getVoices();
+      }
+    };
+    
+    loadVoices();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
+
+  const speak = (text: string) => {
+    if (!window.speechSynthesis) return;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+
+    const voices = window.speechSynthesis.getVoices();
+    const gender = currentScenario?.gender;
+
+    // Try to find a voice that matches the gender
+    if (currentNode?.speaker !== 'Narrator' && gender && voices.length > 0) {
+      const targetVoice = voices.find(v => {
+        const name = v.name.toLowerCase();
+        const lang = v.lang.toLowerCase();
+        
+        // Filter for English voices first
+        if (!lang.startsWith('en')) return false;
+
+        if (gender === 'male') {
+          // Common male voice names/keywords
+          return name.includes('male') || 
+                 name.includes('david') || 
+                 name.includes('mark') || 
+                 name.includes('guy') || 
+                 name.includes('microsoft david') ||
+                 name.includes('google uk english male') ||
+                 name.includes('premium male');
+        } else {
+          // Common female voice names/keywords
+          return name.includes('female') || 
+                 name.includes('zira') || 
+                 name.includes('samantha') || 
+                 name.includes('jessica') || 
+                 name.includes('google us english') ||
+                 name.includes('google uk english female') ||
+                 name.includes('premium female');
+        }
+      });
+      
+      if (targetVoice) {
+        utterance.voice = targetVoice;
+      }
+    }
+    
+    // Adjust voice properties based on speaker and gender
+    if (currentNode?.speaker === 'Narrator') {
+      utterance.rate = 0.9;
+      utterance.pitch = 0.9;
+    } else {
+      utterance.rate = 1.0;
+      // Force pitch adjustment as a fallback for gender
+      utterance.pitch = gender === 'male' ? 0.7 : 1.3;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    if (currentNode && !isCompleted && currentScenarioId) {
+      speak(currentNode.text);
+    }
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [currentNode?.id, isCompleted, currentScenarioId]);
 
   const handleScenarioSelect = (id: string) => {
     setCurrentScenarioId(id);
@@ -450,7 +563,7 @@ const StoryMode: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mt-8 md:mt-12">
-          {Object.values(SCENARIOS).map((scenario, index) => (
+          {filteredScenarios.map((scenario, index) => (
             <motion.div
               key={scenario.id}
               initial={{ opacity: 0, y: 20 }}
@@ -579,9 +692,24 @@ const StoryMode: React.FC = () => {
                <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-200 rounded-full flex items-center justify-center text-xl md:text-2xl border-2 border-slate-300 overflow-hidden shrink-0">
                  {currentNode?.speaker === 'Narrator' ? '📖' : <img src={currentScenario.person} className="w-full h-full object-cover" />}
                </div>
-               <div className="bg-slate-50 p-4 md:p-6 rounded-2xl md:rounded-3xl rounded-tl-none border-2 border-slate-100 shadow-sm max-w-[90%] md:max-w-[80%]">
+               <div className="bg-slate-50 p-4 md:p-6 rounded-2xl md:rounded-3xl rounded-tl-none border-2 border-slate-100 shadow-sm max-w-[90%] md:max-w-[80%] relative group">
                  <p className="font-bold text-slate-400 text-[10px] md:text-xs uppercase mb-1 md:mb-2">{currentNode?.speaker}</p>
                  <p className="text-base md:text-xl font-medium text-slate-800 leading-relaxed">{currentNode?.text}</p>
+                 
+                 <button 
+                   onClick={() => speak(currentNode?.text || '')}
+                   className="absolute -right-12 top-1/2 -translate-y-1/2 p-2 bg-white rounded-full shadow-md border border-slate-100 text-fun-blue hover:scale-110 transition-transform opacity-0 group-hover:opacity-100 hidden md:block"
+                   title="Replay Audio"
+                 >
+                   <Volume2 size={20} />
+                 </button>
+                 
+                 <button 
+                   onClick={() => speak(currentNode?.text || '')}
+                   className="mt-2 text-fun-blue flex items-center gap-1 text-xs font-bold md:hidden"
+                 >
+                   <Volume2 size={14} /> Replay
+                 </button>
                </div>
              </div>
            </div>

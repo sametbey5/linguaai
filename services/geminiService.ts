@@ -26,7 +26,11 @@ export const createGeminiChat = (systemInstruction: string) => {
     };
 };
 
-export const generateVocab = async (topic: string, level: string, context?: string): Promise<any[]> => {
+export const generateVocab = async (topic: string, level: string, context?: string, cefrLevel?: string): Promise<any[]> => {
+    // In a real implementation, we would use cefrLevel in the prompt:
+    const prompt = `Generate vocabulary appropriate for a CEFR ${cefrLevel || 'A1'} English learner on the topic of ${topic}. Context: ${context || 'General'}.`;
+    console.log("AI Prompt (Vocab):", prompt);
+
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const activeContext = context || topic;
@@ -206,7 +210,11 @@ export const generateVocab = async (topic: string, level: string, context?: stri
     ];
 };
 
-export const generateQuiz = async (words: string[]): Promise<any[]> => {
+export const generateQuiz = async (words: string[], cefrLevel?: string): Promise<any[]> => {
+    // In a real implementation, we would use cefrLevel in the prompt:
+    const prompt = `Generate a quiz appropriate for a CEFR ${cefrLevel || 'A1'} English learner based on these words: ${words.join(', ')}.`;
+    console.log("AI Prompt (Quiz):", prompt);
+
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     return [
@@ -259,6 +267,98 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     return null; // Return null to indicate no audio generated in offline mode
 };
 
+export const generateRaceQuestions = async (cefrLevel?: string): Promise<any[]> => {
+    const prompt = `Generate 20 fast-paced English race questions for CEFR ${cefrLevel || 'A1'} level. 
+    Include: Word meaning, Fill in the blank, Sentence correction, and Synonym matching.`;
+    console.log("AI Prompt (Race):", prompt);
+
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Mock data for race questions
+    return [
+        {
+            id: 'r1',
+            type: 'meaning',
+            question: "What does 'Resilient' mean?",
+            options: ["Weak", "Strong/Flexible", "Angry", "Slow"],
+            answer: "Strong/Flexible",
+            explanation: "Resilient means able to recover quickly from difficulties."
+        },
+        {
+            id: 'r2',
+            type: 'fill',
+            question: "She _____ to the store every morning.",
+            options: ["go", "goes", "going", "gone"],
+            answer: "goes",
+            explanation: "Third-person singular 'she' requires 'goes'."
+        },
+        {
+            id: 'r3',
+            type: 'correction',
+            question: "Find the error: 'He don't like apples.'",
+            options: ["He doesn't like apples", "He don't likes apples", "He not like apples", "No error"],
+            answer: "He doesn't like apples",
+            explanation: "'He' uses 'does not' (doesn't) instead of 'do not'."
+        },
+        {
+            id: 'r4',
+            type: 'synonym',
+            question: "What is a synonym for 'Happy'?",
+            options: ["Sad", "Joyful", "Tired", "Angry"],
+            answer: "Joyful",
+            explanation: "Joyful and happy have similar meanings."
+        },
+        {
+            id: 'r5',
+            type: 'meaning',
+            question: "What is the meaning of 'Commute'?",
+            options: ["To talk", "To travel to work", "To eat", "To sleep"],
+            answer: "To travel to work",
+            explanation: "Commute refers to the regular journey between home and work."
+        },
+        {
+            id: 'r6',
+            type: 'fill',
+            question: "I have _____ lunch yet.",
+            options: ["not eat", "not eaten", "no eat", "eaten not"],
+            answer: "not eaten",
+            explanation: "Present perfect 'have not eaten' is correct here."
+        },
+        {
+            id: 'r7',
+            type: 'correction',
+            question: "Correct this: 'I am more tall than you.'",
+            options: ["I am taller than you", "I am most tall than you", "I am more taller than you", "No error"],
+            answer: "I am taller than you",
+            explanation: "Short adjectives use '-er' for comparison, not 'more'."
+        },
+        {
+            id: 'r8',
+            type: 'synonym',
+            question: "Synonym of 'Difficult'?",
+            options: ["Easy", "Hard", "Soft", "Simple"],
+            answer: "Hard",
+            explanation: "Hard and difficult are synonyms."
+        },
+        {
+            id: 'r9',
+            type: 'meaning',
+            question: "What does 'Eloquent' mean?",
+            options: ["Quiet", "Well-spoken", "Loud", "Confused"],
+            answer: "Well-spoken",
+            explanation: "Eloquent means fluent or persuasive in speaking or writing."
+        },
+        {
+            id: 'r10',
+            type: 'fill',
+            question: "If it rains, I _____ stay home.",
+            options: ["will", "would", "am", "was"],
+            answer: "will",
+            explanation: "First conditional uses 'will' for the result."
+        }
+    ];
+};
+
 export const geminiService = {
   generateResponse,
   chat,
@@ -266,5 +366,6 @@ export const geminiService = {
   generateVocab,
   generateQuiz,
   analyzeGrammar,
-  generateSpeech
+  generateSpeech,
+  generateRaceQuestions
 };

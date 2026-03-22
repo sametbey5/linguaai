@@ -8,14 +8,18 @@ import { SUPPORTED_LANGUAGES } from '../constants';
 import UserRoleBadge from './UserRoleBadge';
 
 const Sidebar: React.FC = () => {
-  const { userId, logout, isAdmin, setIsContactOpen, preferredLanguage, updateProfile, stats, isVerifiedTeacher, isPremium } = useGamification();
+  const { userId, logout, isAdmin, setIsContactOpen, preferredLanguage, updateProfile, stats, isVerifiedTeacher, isPremium, wordBank } = useGamification();
   const isKids = true; // Forced to kids mode
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
+  const dueCount = wordBank.filter(w => w.nextReviewAt.split('T')[0] <= today).length;
 
   const navItems = [
     { name: 'Arcade Home', path: '/', icon: <LayoutDashboard size={24} />, color: 'text-fun-blue' },
     { name: <img src="https://i.ibb.co/MyJNdByd/lingavolearns.png" alt="Lingavo Learns" className="h-6 object-contain" />, path: '/videos', icon: <MonitorPlay size={24} />, color: 'text-[#00F798]' },
     { name: 'News', path: '/notifications', icon: <Bell size={24} />, color: 'text-fun-orange' },
+    { name: 'Word Bank', path: '/wordbank', icon: <Brain size={24} />, color: 'text-fun-pink', badge: dueCount > 0 ? dueCount : undefined },
     { name: 'Quest Mode', path: '/roleplay', icon: <Sword size={24} />, color: 'text-fun-pink' },
     { name: 'Talk to Friend', path: '/talk', icon: <Mic size={24} />, color: 'text-fun-green' }, 
     { name: 'Speak Clear', path: '/pronunciation', icon: <Volume2 size={24} />, color: 'text-fun-blue' },
@@ -60,6 +64,11 @@ const Sidebar: React.FC = () => {
               {item.icon}
             </span>
             {item.name}
+            {item.badge && (
+              <span className="ml-auto bg-fun-pink text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                {item.badge}
+              </span>
+            )}
           </NavLink>
         ))}
         

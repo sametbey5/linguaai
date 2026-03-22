@@ -69,6 +69,7 @@ export const QUESTS_KIDS: Scenario[] = [
     avatar: '🧽',
     themeColor: 'from-yellow-300 to-yellow-500',
     difficulty: 'Beginner',
+    cefrLevel: 'A1',
     systemInstruction: "You are the Game Master for 'The Missing Patty'. The user is a detective. They have 3 Hearts. If they make a grammar mistake or say something nonsensical, they lose a heart. They must find the formula by talking to you (SpongeBob). Start the quest now."
   },
   {
@@ -80,6 +81,7 @@ export const QUESTS_KIDS: Scenario[] = [
     avatar: '🦸‍♂️',
     themeColor: 'from-slate-700 to-slate-900',
     difficulty: 'Intermediate',
+    cefrLevel: 'A2',
     systemInstruction: "You are the Game Master. Batman has trapped the user in a simulation. They must answer 3 riddles in English. Use a gritty tone. If they fail, they 'take damage'."
   }
 ];
@@ -94,12 +96,15 @@ export const QUESTS_ADULTS: Scenario[] = [
     avatar: '👨‍💼',
     themeColor: 'from-blue-600 to-blue-800',
     difficulty: 'Business',
+    cefrLevel: 'B2',
     systemInstruction: "You are a tough CEO. The user is pitching an idea. They have 3 'Confidence Points' (Health). If they use 'um', 'uh', or bad grammar, they lose a point. If they lose all points, the meeting ends."
   }
 ];
 
 export const VOCAB_TOPICS_KIDS = ["Animals", "Space", "Candy Shop", "Superpowers"];
 export const VOCAB_TOPICS_ADULTS = ["Technology", "Marketing", "Travel", "Legal Terms"];
+
+export const CEFR_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 export const SUPPORTED_LANGUAGES = [
   { code: 'tr', name: 'Turkish', flag: '🇹🇷' },

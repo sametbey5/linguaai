@@ -19,6 +19,7 @@ export interface Scenario {
   textColor?: string;
   systemInstruction: string;
   difficulty: 'Beginner' | 'Intermediate' | 'Advanced' | 'Business' | 'Casual';
+  cefrLevel: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 }
 
 export interface VocabWord {
@@ -26,6 +27,19 @@ export interface VocabWord {
   definition: string;
   exampleSentence: string;
   pronunciation?: string;
+  cefrLevel?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+}
+
+export interface WordBankEntry {
+  word: string;
+  definition: string;
+  exampleSentence: string;
+  pronunciation?: string;
+  source: string;
+  addedAt: string;
+  nextReviewAt: string;
+  intervalDays: number;
+  timesCorrect: number;
 }
 
 export interface GrammarAnalysis {
@@ -161,6 +175,7 @@ export interface UserProfile {
   isVerifiedTeacher?: boolean;
   teacherStatus?: 'none' | 'pending' | 'verified';
   isAdmin?: boolean;
+  wordBank?: WordBankEntry[];
 }
 
 export interface AppNotification {
@@ -270,4 +285,9 @@ export interface GamificationContextType {
   helpRequests: TeacherHelpRequest[];
   requestHelp: (topic: string, message: string) => Promise<boolean>;
   answerHelpRequest: (requestId: string, answer: string) => Promise<boolean>;
+  
+  // Word Bank Functions
+  wordBank: WordBankEntry[];
+  addToWordBank: (word: VocabWord, source: string) => void;
+  updateWordBankEntry: (word: string, isCorrect: boolean) => void;
 }

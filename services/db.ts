@@ -67,6 +67,9 @@ export const db = {
       if (!parsed.email) {
           parsed.email = '';
       }
+      if (!parsed.wordBank) {
+          parsed.wordBank = [];
+      }
       
       return parsed;
     } catch (e) {
@@ -354,7 +357,8 @@ export const db = {
       isPremium: false,
       focusArea: [],
       usageContext: '',
-      preferredLanguage: 'Turkish'
+      preferredLanguage: 'Turkish',
+      wordBank: []
     };
   },
 

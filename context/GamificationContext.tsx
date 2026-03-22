@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { UserStats, Badge, LeaderboardEntry, AppMode, Quest, TradeOffer, GamificationContextType, UserProfile, UserTrade, ContactRequest, AppNotification, TeacherApplication, TeacherHelpRequest } from '../types';
+import { UserStats, Badge, LeaderboardEntry, AppMode, Quest, TradeOffer, GamificationContextType, UserProfile, UserTrade, ContactRequest, AppNotification, TeacherApplication, TeacherHelpRequest, WordBankEntry, VocabWord } from '../types';
 import { Star, Zap, Award, Gift, Sparkles, ArrowRightLeft, AlertTriangle } from 'lucide-react';
 import { db } from '../services/db';
 import { supabase } from '../services/supabaseClient';
@@ -61,6 +61,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [cefrLevel, setCefrLevel] = useState<'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'>(defaultProfile.cefrLevel || 'A1');
   const [preferredLanguage, setPreferredLanguage] = useState<string>(defaultProfile.preferredLanguage || 'Turkish');
   const [email, setEmail] = useState<string>(defaultProfile.email || '');
+  const [wordBank, setWordBank] = useState<WordBankEntry[]>(defaultProfile.wordBank || []);
   
   // Local (non-persisted) state
   const [tradeOffers, setTradeOffers] = useState<TradeOffer[]>(INITIAL_TRADES);
@@ -148,6 +149,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         setCefrLevel(newProfile.cefrLevel || 'A1');
         setPreferredLanguage(newProfile.preferredLanguage || 'Turkish');
         setEmail(newProfile.email || '');
+        setWordBank(newProfile.wordBank || []);
       } else {
         // LOGIN FLOW
         if (!existingProfile) {
@@ -171,6 +173,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         setCefrLevel(existingProfile.cefrLevel || 'A1');
         setPreferredLanguage(existingProfile.preferredLanguage || 'Turkish');
         setEmail(existingProfile.email || '');
+        setWordBank(existingProfile.wordBank || []);
       }
 
       // Success
@@ -209,6 +212,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     setCefrLevel('A1');
     setPreferredLanguage('Turkish');
     setEmail('');
+    setWordBank([]);
   };
 
   // Load User Data from DB when userId changes (e.g. on page refresh)
@@ -236,6 +240,7 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
             setCefrLevel(profile.cefrLevel || 'A1');
             setPreferredLanguage(profile.preferredLanguage || 'Turkish');
             setEmail(profile.email || '');
+            setWordBank(profile.wordBank || []);
             setIsVerifiedTeacher(profile.isVerifiedTeacher || false);
             setTeacherStatus(profile.teacherStatus || 'none');
             if (profile.isAdmin) setIsAdmin(true);
@@ -442,7 +447,8 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
               cefrLevel,
               preferredLanguage,
               isVerifiedTeacher,
-              teacherStatus
+              teacherStatus,
+              wordBank
           });
       };
       
@@ -979,6 +985,52 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
     return false;
   };
 
+  const addToWordBank = (word: VocabWord, source: string) => {
+    setWordBank(prev => {
+      // Check if word already exists
+      if (prev.some(e => e.word.toLowerCase() === word.word.toLowerCase())) {
+        return prev;
+      }
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const newEntry: WordBankEntry = {
+        ...word,
+        source,
+        addedAt: new Date().toISOString(),
+        nextReviewAt: tomorrow.toISOString(),
+        intervalDays: 1,
+        timesCorrect: 0
+      };
+      
+      setNotification({ text: `Added to Word Bank: ${word.word}`, type: 'badge' });
+      setTimeout(() => setNotification(null), 2000);
+      
+      return [newEntry, ...prev];
+    });
+  };
+
+  const updateWordBankEntry = (word: string, isCorrect: boolean) => {
+    setWordBank(prev => {
+      return prev.map(entry => {
+        if (entry.word.toLowerCase() === word.toLowerCase()) {
+          const newInterval = isCorrect ? entry.intervalDays * 2 : 1;
+          const nextReview = new Date();
+          nextReview.setDate(nextReview.getDate() + (isCorrect ? entry.intervalDays : 1));
+          
+          return {
+            ...entry,
+            intervalDays: newInterval,
+            nextReviewAt: nextReview.toISOString(),
+            timesCorrect: isCorrect ? entry.timesCorrect + 1 : entry.timesCorrect
+          };
+        }
+        return entry;
+      });
+    });
+  };
+
   if (userId && isLoading) {
       return (
           <div className="fixed inset-0 bg-white z-[999] flex flex-col items-center justify-center">
@@ -1014,7 +1066,8 @@ export const GamificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       isContactOpen, setIsContactOpen, sendAdminMessage, replyToRequest,
       focusArea, usageContext, cefrLevel, preferredLanguage, email, updateProfile,
       requestPasswordReset, verifyResetCode, changeUsername, refreshTradeOffers,
-      isVerifiedTeacher, teacherStatus, applyForTeacher, verifyTeacher, teacherApplications, verifiedTeachers, refreshTeacherApplications, helpRequests, requestHelp, answerHelpRequest
+      isVerifiedTeacher, teacherStatus, applyForTeacher, verifyTeacher, teacherApplications, verifiedTeachers, refreshTeacherApplications, helpRequests, requestHelp, answerHelpRequest,
+      wordBank, addToWordBank, updateWordBankEntry
     }}>
       {children}
       

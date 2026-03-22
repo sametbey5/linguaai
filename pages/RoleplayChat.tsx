@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, ChevronLeft, Heart, Backpack, Sword, Shield, Zap, Globe } from 'lucide-react';
-import { QUESTS_KIDS, QUESTS_ADULTS } from '../constants';
+import { QUESTS_KIDS, QUESTS_ADULTS, CEFR_ORDER } from '../constants';
 import { Message, Scenario } from '../types';
 import { useGamification } from '../context/GamificationContext';
 import { SCENARIO_TRANSLATIONS, UI_TRANSLATIONS } from '../translations';
@@ -21,7 +21,7 @@ const createMockChat = (systemInstruction: string) => {
 import Button from '../components/Button';
 
 const QuestAdventure: React.FC = () => {
-  const { mode, awardPoints, usageContext, preferredLanguage } = useGamification();
+  const { mode, awardPoints, usageContext, preferredLanguage, cefrLevel } = useGamification();
   const isKids = mode === 'kids';
   
   const t = (key: string) => UI_TRANSLATIONS[preferredLanguage]?.[key] || UI_TRANSLATIONS['Turkish']?.[key] || key;
@@ -40,9 +40,14 @@ const QuestAdventure: React.FC = () => {
 
   // Dynamic Quests based on Context
   const getQuests = () => {
-    if (isKids) return QUESTS_KIDS;
+    let baseQuests = isKids ? [...QUESTS_KIDS] : [...QUESTS_ADULTS];
     
-    const baseQuests = [...QUESTS_ADULTS];
+    // Filter by CEFR level
+    const userLevelIndex = CEFR_ORDER.indexOf(cefrLevel);
+    baseQuests = baseQuests.filter(q => {
+      const scenarioLevelIndex = CEFR_ORDER.indexOf(q.cefrLevel || 'A1');
+      return scenarioLevelIndex <= userLevelIndex + 1;
+    });
     
     if (usageContext === 'Travel') {
       baseQuests.push({
@@ -54,6 +59,7 @@ const QuestAdventure: React.FC = () => {
         avatar: '👮',
         themeColor: 'from-sky-500 to-blue-600',
         difficulty: 'Intermediate',
+        cefrLevel: 'A2',
         systemInstruction: "You are an immigration officer. The user is a traveler. Ask them questions about their visa, purpose of visit, and luggage. If they hesitate or make big mistakes, they lose a 'Patience Heart'."
       });
       baseQuests.push({
@@ -65,6 +71,7 @@ const QuestAdventure: React.FC = () => {
         avatar: '🎎',
         themeColor: 'from-red-500 to-pink-600',
         difficulty: 'Beginner',
+        cefrLevel: 'A1',
         systemInstruction: "You are a helpful local. The user is lost. Give them directions but test their listening skills."
       });
     } else if (usageContext === 'Business') {
@@ -77,6 +84,7 @@ const QuestAdventure: React.FC = () => {
         avatar: '👔',
         themeColor: 'from-green-600 to-emerald-800',
         difficulty: 'Advanced',
+        cefrLevel: 'B2',
         systemInstruction: "You are an HR Manager. The user wants a raise. You are tough but fair. If they are rude or unclear, they lose a 'Negotiation Heart'."
       });
     } else if (usageContext === 'Academic') {
@@ -89,6 +97,7 @@ const QuestAdventure: React.FC = () => {
         avatar: '👨‍🏫',
         themeColor: 'from-amber-600 to-orange-800',
         difficulty: 'Advanced',
+        cefrLevel: 'C1',
         systemInstruction: "You are a strict Professor. The user is defending their thesis. Ask hard questions. If they can't explain clearly, they lose a 'Grade Heart'."
       });
     }
