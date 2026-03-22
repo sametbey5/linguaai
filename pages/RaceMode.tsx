@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGamification } from '../context/GamificationContext';
-import { Trophy, Users, Zap, Timer, Flag, CheckCircle2, XCircle, ArrowRight, Loader2, Flame, Award, RefreshCw, Home, Info } from 'lucide-react';
+import { Trophy, Users, Zap, Timer, Flag, CheckCircle2, XCircle, Home, Flame, Award, RefreshCw, Info, Loader2 } from 'lucide-react';
 import Button from '../components/Button';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateRaceQuestions } from '../services/geminiService';
+import { supabase } from '../services/supabaseClient';
 
 interface Opponent {
   name: string;
@@ -41,6 +42,7 @@ const RaceMode: React.FC = () => {
   
   // Game State
   const [gameState, setGameState] = useState<'idle' | 'matching' | 'playing' | 'results'>('idle');
+  const [isRealOpponent, setIsRealOpponent] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -57,17 +59,129 @@ const RaceMode: React.FC = () => {
   // Refs
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const opponentTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const matchingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lobbyChannelRef = useRef<any>(null);
+  const gameChannelRef = useRef<any>(null);
 
-  // --- Game Logic ---
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (opponentTimerRef.current) clearInterval(opponentTimerRef.current);
+      if (matchingTimeoutRef.current) clearTimeout(matchingTimeoutRef.current);
+      if (lobbyChannelRef.current) lobbyChannelRef.current.unsubscribe();
+      if (gameChannelRef.current) gameChannelRef.current.unsubscribe();
+    };
+  }, []);
+
+  // --- Matching Logic ---
 
   const startMatching = () => {
     setGameState('matching');
-    // Simulate matching delay
-    setTimeout(() => {
-      const randomOpponent = OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)];
-      setOpponent({ ...randomOpponent, progress: 0 });
-      loadQuestions();
-    }, 2500);
+    setIsRealOpponent(false);
+    
+    const lobbyId = `race_lobby:${cefrLevel || 'A1'}`;
+    const channel = supabase.channel(lobbyId, {
+      config: { presence: { key: userId || 'anonymous' } }
+    });
+
+    lobbyChannelRef.current = channel;
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const players = Object.keys(state).filter(id => id !== userId);
+        
+        if (players.length > 0) {
+          const opponentId = players[0];
+          const isHost = (userId || '') < opponentId;
+          const matchRoomId = isHost ? `match_${userId}_${opponentId}` : `match_${opponentId}_${userId}`;
+          
+          if (isHost) {
+            channel.send({
+              type: 'broadcast',
+              event: 'match_found',
+              payload: { hostId: userId, opponentId, roomId: matchRoomId }
+            });
+          }
+        }
+      })
+      .on('broadcast', { event: 'match_found' }, (payload: any) => {
+        if (payload.opponentId === userId || payload.hostId === userId) {
+          if (matchingTimeoutRef.current) clearTimeout(matchingTimeoutRef.current);
+          channel.unsubscribe();
+          startRealMatch(payload.roomId, payload.hostId === userId ? 'host' : 'guest');
+        }
+      })
+      .subscribe(async (status: string) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ userId, joinedAt: Date.now() });
+        }
+      });
+
+    // Fallback to bot after 10 seconds
+    matchingTimeoutRef.current = setTimeout(() => {
+      if (lobbyChannelRef.current) lobbyChannelRef.current.unsubscribe();
+      startBotMatch();
+    }, 10000);
+  };
+
+  const startBotMatch = () => {
+    const randomOpponent = OPPONENTS[Math.floor(Math.random() * OPPONENTS.length)];
+    setOpponent({ ...randomOpponent, progress: 0 });
+    setIsRealOpponent(false);
+    loadQuestions();
+  };
+
+  const startRealMatch = async (roomId: string, role: 'host' | 'guest') => {
+    setIsRealOpponent(true);
+    const channel = supabase.channel(`race_game:${roomId}`);
+    gameChannelRef.current = channel;
+
+    channel
+      .on('broadcast', { event: 'start_game' }, (payload: any) => {
+        if (role === 'guest') {
+          setQuestions(payload.questions);
+          setOpponent({
+            name: payload.hostName,
+            avatar: payload.hostAvatar,
+            progress: 0,
+            speed: 0
+          });
+          setGameState('playing');
+          startTimers();
+        }
+      })
+      .on('broadcast', { event: 'progress_update' }, (payload: any) => {
+        if (payload.userId !== userId) {
+          setOpponentProgress(payload.progress);
+        }
+      })
+      .subscribe(async (status: string) => {
+        if (status === 'SUBSCRIBED' && role === 'host') {
+          const q = await generateRaceQuestions(cefrLevel);
+          setQuestions(q);
+          setOpponent({
+            name: "Opponent", // Will be updated by presence if needed, but broadcast is simpler
+            avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Opponent",
+            progress: 0,
+            speed: 0
+          });
+          
+          // Host sends questions to guest
+          channel.send({
+            type: 'broadcast',
+            event: 'start_game',
+            payload: { 
+              questions: q, 
+              hostName: userId, 
+              hostAvatar: stats.avatar 
+            }
+          });
+          
+          setGameState('playing');
+          startTimers();
+        }
+      });
   };
 
   const loadQuestions = async () => {
@@ -96,20 +210,23 @@ const RaceMode: React.FC = () => {
       });
     }, 1000);
 
-    // Opponent Progress Simulation
-    opponentTimerRef.current = setInterval(() => {
-      setOpponentProgress((prev) => {
-        if (prev >= 100) return 100;
-        // Random progress based on opponent speed
-        const increment = Math.random() * 5 * (opponent?.speed || 0.2) * 10;
-        return Math.min(100, prev + increment);
-      });
-    }, 1500);
+    // Opponent Progress Simulation (Only for bots)
+    if (!isRealOpponent) {
+      opponentTimerRef.current = setInterval(() => {
+        setOpponentProgress((prev) => {
+          if (prev >= 100) return 100;
+          // Random progress based on opponent speed
+          const increment = Math.random() * 5 * (opponent?.speed || 0.2) * 10;
+          return Math.min(100, prev + increment);
+        });
+      }, 1500);
+    }
   };
 
   const endGame = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (opponentTimerRef.current) clearInterval(opponentTimerRef.current);
+    if (gameChannelRef.current) gameChannelRef.current.unsubscribe();
     setGameState('results');
     
     // Award points if won or played well
@@ -139,10 +256,25 @@ const RaceMode: React.FC = () => {
 
       setTimeout(() => {
         setFeedback(null);
-        if (currentIndex + 1 >= questions.length) {
+        const nextIndex = currentIndex + 1;
+        const isFinished = nextIndex >= questions.length;
+        
+        // Broadcast progress if real opponent
+        if (isRealOpponent && gameChannelRef.current) {
+          gameChannelRef.current.send({
+            type: 'broadcast',
+            event: 'progress_update',
+            payload: { 
+              userId, 
+              progress: (nextIndex / questions.length) * 100 
+            }
+          });
+        }
+
+        if (isFinished) {
           endGame();
         } else {
-          setCurrentIndex(prev => prev + 1);
+          setCurrentIndex(nextIndex);
         }
       }, 300);
     } else {
